@@ -1,47 +1,48 @@
 ﻿#include <iostream>
+#include <vector>
+#include <array>
 
 #include <src/tinyGL.h>
 #include <src/linearAlgebra.h>
+#include <src/ClientWindow/ClientWindow.h>
 
 int main()
 {
-    tgl::Init();
+	tgl::Init();
 
-    tgl::View window(640, 480, L"Minecraft++");
-    
-    std::array<float, 9> triangle{
-        0.f, .5f, 0.f,
-        -.5f, -.5f, 0.f,
-        .5f, -.5f, 0.f
-    };
-    std::array<float, 9> colors{
-        1.f,0.f,0.f,
-        0.f,1.f,0.f,
-        0.f,0.f,1.f
-    };
+	ClientWindow window(640, 480, L"Minecraft++");
 
+	std::vector<la::vec3> vertexes {
+		{0.f, .5f, 0.f },
+		{-.5f, -.5f, 0.f},
+		{.5f,-.5f, 0.f}
+	};
 
-    tgl::VAO vao;
-    vao.push_vbo(triangle);
-    vao.push_vbo(colors);
-    
-    tgl::Shader first("first");
-    first.bind_attribute(0, "position");
-    first.bind_attribute(1, "color");
-    first.link();
+	std::vector<la::vec3> colors{
+		{1.f, 0.f, 0.f},
+		{0.f, 1.f, 0.f},
+		{0.f, 0.f, 1.f}
+	};
 
-    first.use();
+	tgl::VAO vao;
+	vao.add_vertex_buffer_object(vertexes.data(), vertexes.size() * la::vec3::count());
+	vao.add_vertex_buffer_object(colors.data(), vertexes.size() * la::vec3::count());
 
-    for (;window.is_open();)
-    {
-        tgl::event_pool();
-        tgl::gl::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        tgl::gl::glClearColor(0.75f, 0.5f, 0.35f, 1.f);
-        
-        vao.draw(3);
+	tgl::Shader first("first");
+	first.bind_attribute(0, "position");
+	first.bind_attribute(1, "color");
+	first.link();
 
-        window.swap_buffers();
-    }
+	first.use();
 
-    return 0;
+	for (; window.is_open();)
+	{
+		tgl::event_pool();
+
+		vao.draw(3);
+
+		window.swap_buffers();
+	}
+
+	return 0;
 }

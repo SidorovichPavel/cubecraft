@@ -11,10 +11,16 @@
     <Filter Include="res\glsl">
       <UniqueIdentifier>{33269cf3-48c0-48b5-9a54-48767eede963}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\ClientWindow">
+      <UniqueIdentifier>{e64c6f17-d06f-4299-8be8-46aec921e4ea}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\minecraft++.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ClientWindow\ClientWindow.cpp">
+      <Filter>src\ClientWindow</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -24,5 +30,10 @@
     <None Include="res\glsl\first.frag">
       <Filter>res\glsl</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ClientWindow\ClientWindow.h">
+      <Filter>src\ClientWindow</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
