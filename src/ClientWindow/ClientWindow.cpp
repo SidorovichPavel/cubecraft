@@ -7,7 +7,7 @@ ClientWindow::ClientWindow(const int width, const int height, const std::wstring
 
 la::mat4 ClientWindow::get_perspective()
 {
-	return la::perspeñtive(0.1f, 100.f, static_cast<float>(mWidth) / mHeight, mFov);
+	return la::perspeñtive(0.1f, 100.f, static_cast<float>(mWidth) / static_cast<float>(mHeight), mFov);
 }
 
 void ClientWindow::set_title(const std::wstring& title)
@@ -19,6 +19,7 @@ void ClientWindow::size(int width, int height)
 {
 	mWidth = width;
 	mHeight = height;
+
 	tgl::gl::glViewport(0, 0, mWidth, mHeight);
 }
 

@@ -157,6 +157,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\SimpleApp\SimpleApp.cpp" />
     <ClCompile Include="src\ClientWindow\ClientWindow.cpp" />
     <ClCompile Include="src\minecraft++.cpp" />
   </ItemGroup>
@@ -165,6 +166,8 @@
     <None Include="res\glsl\first.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\incs.h" />
+    <ClInclude Include="src\SimpleApp\SimpleApp.h" />
     <ClInclude Include="src\ClientWindow\ClientWindow.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

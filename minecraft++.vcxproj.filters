@@ -14,6 +14,9 @@
     <Filter Include="src\ClientWindow">
       <UniqueIdentifier>{e64c6f17-d06f-4299-8be8-46aec921e4ea}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\SimpleApp">
+      <UniqueIdentifier>{27cfd07d-82bd-4b5c-83f9-80d1018da98e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\minecraft++.cpp">
@@ -21,6 +24,9 @@
     </ClCompile>
     <ClCompile Include="src\ClientWindow\ClientWindow.cpp">
       <Filter>src\ClientWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SimpleApp\SimpleApp.cpp">
+      <Filter>src\SimpleApp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -34,6 +40,12 @@
   <ItemGroup>
     <ClInclude Include="src\ClientWindow\ClientWindow.h">
       <Filter>src\ClientWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SimpleApp\SimpleApp.h">
+      <Filter>src\SimpleApp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\incs.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
