@@ -11,7 +11,7 @@
 class App
 {
 private:
-	static ClientWindow* Window;
+	static tgl::View* Window;
 	static tgl::Timer* Timer;
 	static tgl::Shader* ShaderFirst;
 	static tgl::VAO* Vao;
