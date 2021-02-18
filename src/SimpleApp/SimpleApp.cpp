@@ -2,18 +2,23 @@
 #include <assert.h>
 
 std::wstring gTitle{ L"Minecraft++" };
-tgl::View* App::Window;
+tgl::View* App::appWindow;
 tgl::Timer* App::Timer;
 tgl::Shader* App::ShaderFirst;
 tgl::VAO* App::Vao;
+Camera* App::appCamera;
+
+bool App::appKeys[1024];
+bool App::appLockCursor = false;
+float App::appMouseSensitivity = 0.025f;
 
 size_t App::PrevTime;
 float App::FrameTime;
 
 //timed
-la::mat4 model(1.f);
-la::mat4 perspective(1.f);
-la::mat4 view(1.f);
+la::mat4 model;
+la::mat4 perspective;
+la::mat4 view;
 
 std::vector<unsigned> indices{ 0,1,2,1,0,3,6,5,4,7,4,5,2,6,0,0,6,4,1,3,5,5,3,7,0,4,3,3,4,7,5,6,1,1,6,2 };
 
@@ -39,20 +44,56 @@ std::vector<la::vec3> colors{
 	{0.f, 0.f, 1.f},
 };
 
+//timed
+float angle = 0.f;//delete this
+
 void App::Init(int argn, char** argc)
 {
 	tgl::Init();
 
-	Window = new tgl::View(640, 480, gTitle);
-	Window->enale_opengl_context();
-	Window->size_event.attach([] (uint16_t x, uint16_t y) -> void
-							  {
-								  tgl::gl::glViewport(0, 0, x, y);
-								  perspective = la::perspeñtive(0.1f, 100.f,
-																static_cast<float>(x) / static_cast<float>(y),
-																45.f);
-							  });
-	perspective = la::perspeñtive(0.1f, 100.f, 640.f / 480.f, 45.f);
+	appWindow = new tgl::View(640, 480, gTitle);
+	appCamera = new Camera(la::vec3(0.f, 0.f, 5.f), la::vec3(0.f, 0.f, 0.f), la::vec3(0.f, 1.f, 0.f), 640.f / 480.f, 45.f);
+
+	appWindow->enale_opengl_context();
+
+	appWindow->size_event.attach(appCamera, &Camera::update_aspect);
+
+	appWindow->size_event.attach([] (uint16_t x, uint16_t y)
+								 {
+									 tgl::gl::glViewport(0, 0, x, y);
+								 });
+
+	appWindow->mouse_wheel_event.attach(appCamera, &Camera::update_Fovy);
+
+	appWindow->key_down_event.attach([] (int64_t code, int64_t) 
+									 { 
+										 if (code >= 0 && code < 1024)
+											 appKeys[code] = true; 
+									 });
+
+	appWindow->key_down_event.attach([] (int64_t code, int64_t)
+									 {
+										 if (appKeys[VK_TAB])
+											 appLockCursor = !appLockCursor;
+										 appWindow->show_cursor(!appLockCursor);
+										 if (appLockCursor)
+											 appWindow->enable_mouse_raw_input();
+										 else
+											 appWindow->disable_mouse_raw_input();
+									 });
+
+	appWindow->key_up_event.attach([] (int64_t code, int64_t) 
+								   { 
+									   if (code >= 0 && code < 1024)
+										   appKeys[code] = false; 
+								   });
+
+	appWindow->mouse_raw_input_event.attach([] (int32_t dx, int32_t dy)
+											{
+												appCamera->update_angles(dy * -appMouseSensitivity * FrameTime,
+																		 dx * -appMouseSensitivity * FrameTime,
+																		 0.f);
+											});
 
 	Vao = new tgl::VAO();
 	Vao->add_vertex_buffer(vertexes.data(), vertexes.size() * la::vec3::count());
@@ -71,27 +112,56 @@ void App::Init(int argn, char** argc)
 	PrevTime = tgl::win::GetTickCount64();
 	FrameTime = 0.f;
 
-	Timer = new tgl::Timer(Window->get_handle(), 200);
+	model = la::mat4(1.f);
+	view = la::mat4(1.f);
+	perspective = la::mat4(1.f);
 }
 
-//timed
-float angle = 0.f;//delete this
+
+void App::KeyProcessing()
+{
+	if (appKeys['W'] || appKeys[VK_UP])
+		*appCamera += appCamera->get_direction() * FrameTime;
+	if (appKeys['S'])
+		*appCamera -= appCamera->get_direction() * FrameTime;
+	if (appKeys['D'])
+		*appCamera += appCamera->get_right() * FrameTime;
+	if (appKeys['A'])
+		*appCamera -= appCamera->get_right() * FrameTime;
+	if (appKeys['Q'] && appLockCursor)
+		appCamera->update_angles(0.f, 0.f, 1.5f * FrameTime);
+	if (appKeys['E'] && appLockCursor)
+		appCamera->update_angles(0.f, 0.f, -1.5f * FrameTime);
+	if (appKeys[VK_ESCAPE])
+		appWindow->destroy();
+}
+
+
+void App::UpdateFrmaeTime()
+{
+	size_t current_time = tgl::win::GetTickCount64();
+	FrameTime = (current_time - PrevTime) / 1000.f;
+	PrevTime = current_time;
+}
 
 void App::Render()
 {
+	::App::UpdateFrmaeTime();
+
+	::App::KeyProcessing();
+
 	tgl::gl::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	tgl::gl::glClearColor(0.f, 0.f, 0.f, 1.f);
 
 	model = la::mat4(1.f);
 	model = la::rotate(model,
-					   la::vec3(std::cosf(angle) * std::sinf(angle),
-								std::tan(angle),
-								std::coshf(angle)),
+					   la::vec3(std::cosf(angle),
+								std::sinf(angle),
+								std::cosf(angle)),
 					   angle);
 	angle += 0.5f * FrameTime;
-	view = la::lock_at(la::vec3(0.f, 2.f, 1.f),
-					   la::vec3(0.f, 0.f, 0.f),
-					   la::vec3(0.f, 1.f, 0.f));
+	view = appCamera->get_view();
+	perspective = appCamera->get_perspective();
 
 	auto transform = perspective * view * model;
 
@@ -103,18 +173,7 @@ void App::Render()
 
 	//section end
 
-	Window->swap_buffers();
-
-	if (Timer->check())
-	{
-		std::wstring out = gTitle;
-		out += L"; fps : ";
-		out += std::to_wstring(1.f / FrameTime);
-		out += L"ms;";
-		Window->set_title(out);
-
-		Timer->reset();
-	}
+	appWindow->swap_buffers();
 }
 
 int App::Run()
@@ -123,39 +182,35 @@ int App::Run()
 	size_t nextUpdate{};
 	size_t fpsLock = 1000 / 60;
 
-	while (Window->is_open())
+	while (appWindow->is_open())
 	{
-		if (tgl::win::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
-			tgl::win::TranslateMessage(&msg);
-			tgl::win::DispatchMessage(&msg);
-		}
-
 		size_t ms = tgl::win::GetTickCount64();
 		auto msNext = nextUpdate;
 		size_t wait{};
 		size_t ret{ WAIT_TIMEOUT };
 
+		while (tgl::win::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+			tgl::win::TranslateMessage(&msg);
+			tgl::win::DispatchMessage(&msg);
+		}
+
 		if (ms < msNext)
 		{
 			wait = min(fpsLock, msNext - ms);
 			::App::Render();
-			FrameTime = (tgl::win::GetTickCount64() - ms) / 1000.f;
 		}
 
 		if (wait <= 1)
 		{
 			nextUpdate = ms + fpsLock;
 			::App::Render();
-			FrameTime = (tgl::win::GetTickCount64() - ms) / 1000.f;
 		}
 
 		assert((wait & 0xffff0000) == 0);
 		if (tgl::win::MsgWaitForMultipleObjects(0, nullptr, FALSE, static_cast<unsigned>(wait), QS_ALLEVENTS) == WAIT_TIMEOUT)
 		{
 			::App::Render();
-			size_t current_time = tgl::win::GetTickCount64();
-			nextUpdate = current_time + fpsLock;
-			FrameTime = (current_time - ms) / 1000.f;
+			nextUpdate = tgl::win::GetTickCount64() + fpsLock;
 		}
 	}
 
@@ -167,5 +222,6 @@ void App::Terminate()
 	delete Timer;
 	delete ShaderFirst;
 	delete Vao;
-	delete Window;
+	delete appCamera;
+	delete appWindow;
 }
