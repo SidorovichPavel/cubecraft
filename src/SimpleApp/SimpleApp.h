@@ -6,6 +6,7 @@
 #include <atomic>
 #include <mutex>
 
+#include <bitset>
 #include <src/incs.h>
 
 class App
@@ -14,10 +15,11 @@ private:
 	static tgl::View* appWindow;
 	static tgl::Timer* Timer;
 	static tgl::Shader* ShaderFirst;
-	static tgl::VAO* Vao;
+	static tgl::Mesh* appMesh;
+	static tgl::Texture* appTexture;
 	static Camera* appCamera;
 
-	static bool appKeys[1024];
+	static std::bitset<1024> appKeys;
 	static bool appLockCursor;
 	static float appMouseSensitivity;
 

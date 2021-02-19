@@ -1,9 +1,12 @@
 #version 330
 
-in vec3 pass_color;
-out vec4 color;
+in vec2 TexCoord;
+
+out vec4 Result;
+
+uniform sampler2D ourTexture;
 
 void main()
 {
-	color = vec4(pass_color, 1.f);
+    Result = texture(ourTexture, TexCoord);
 }

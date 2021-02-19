@@ -17,6 +17,9 @@
     <Filter Include="src\Camera">
       <UniqueIdentifier>{237b464a-fec6-45be-95e3-65043965930b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Voxels">
+      <UniqueIdentifier>{9fdd66b0-f68b-489c-8c1d-9a1411981293}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\minecraft++.cpp">
@@ -27,6 +30,15 @@
     </ClCompile>
     <ClCompile Include="src\Camera\Camera.cpp">
       <Filter>src\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Voxels\VoxelRenderer.cpp">
+      <Filter>src\Voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Voxels\Chunk.cpp">
+      <Filter>src\Voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Voxels\Voxel.cpp">
+      <Filter>src\Voxels</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -46,6 +58,15 @@
     </ClInclude>
     <ClInclude Include="src\Camera\Camera.h">
       <Filter>src\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Voxels\VoxelRenderer.h">
+      <Filter>src\Voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Voxels\Voxel.h">
+      <Filter>src\Voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Voxels\Chunk.h">
+      <Filter>src\Voxels</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

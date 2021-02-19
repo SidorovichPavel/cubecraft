@@ -1,5 +1,4 @@
 ﻿#include <src/SimpleApp/SimpleApp.h>
-#include <src/Event/Event.h>
 
 int main(int argn, char** argc)
 {

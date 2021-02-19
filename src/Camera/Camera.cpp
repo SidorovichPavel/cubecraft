@@ -55,10 +55,10 @@ void Camera::update_Fovy(uint16_t _Keys, int16_t _Delta, int32_t x, int32_t y) n
 {
 	if (_Delta > 0)
 		if ((mFovy - 44.5f) > std::numeric_limits<float>::epsilon())
-			mFovy -= 0.85f;
+			mFovy -= 0.1f;
 	if (_Delta < 0)
 		if ((45.5f - mFovy) > std::numeric_limits<float>::epsilon())
-			mFovy += 0.85f;
+			mFovy += 0.1f;
 }
 
 void Camera::update_aspect(uint16_t x, uint16_t y)noexcept

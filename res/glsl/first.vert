@@ -1,15 +1,15 @@
 #version 330
 
-in vec3 position;
-in vec3 color;
+layout (location = 0) in vec3 position;
+layout (location = 1) in vec2 texCoord;
+
+out vec3 ourColor;
+out vec2 TexCoord;
 
 uniform mat4 transform;
 
-out vec3 pass_color;
-
 void main()
 {
-	color.xyz;
-	pass_color = color;
-	gl_Position = transform * vec4(position, 1.f);
+    gl_Position = transform * vec4(position, 1.0f);
+    TexCoord = texCoord;
 }

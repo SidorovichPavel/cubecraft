@@ -5,10 +5,11 @@ std::wstring gTitle{ L"Minecraft++" };
 tgl::View* App::appWindow;
 tgl::Timer* App::Timer;
 tgl::Shader* App::ShaderFirst;
-tgl::VAO* App::Vao;
+tgl::Mesh* App::appMesh;
+tgl::Texture* App::appTexture;
 Camera* App::appCamera;
 
-bool App::appKeys[1024];
+std::bitset<1024> App::appKeys;
 bool App::appLockCursor = false;
 float App::appMouseSensitivity = 0.025f;
 
@@ -20,28 +21,13 @@ la::mat4 model;
 la::mat4 perspective;
 la::mat4 view;
 
-std::vector<unsigned> indices{ 0,1,2,1,0,3,6,5,4,7,4,5,2,6,0,0,6,4,1,3,5,5,3,7,0,4,3,3,4,7,5,6,1,1,6,2 };
+std::vector<unsigned> indices{ 1,0,2,2,0,3/*,6,5,4,7,4,5,2,6,0,0,6,4,1,3,5,5,3,7,0,4,3,3,4,7,5,6,1,1,6,2 */ };
 
-std::vector<la::vec3> vertexes{
-	{  .5f,  .5f, .5f },
-	{ -.5f, -.5f, .5f },
-	{  .5f, -.5f, .5f },
-	{ -.5f,  .5f, .5f },
-	{  .5f,  .5f, -.5f },
-	{ -.5f, -.5f, -.5f },
-	{  .5f, -.5f, -.5f },
-	{ -.5f,  .5f, -.5f },
-};
-
-std::vector<la::vec3> colors{
-	{1.f, 0.f, 0.f},
-	{1.f, 0.f, 0.f},
-	{1.f, 0.f, 0.f},
-	{1.f, 0.f, 0.f},
-	{0.f, 0.f, 1.f},
-	{0.f, 0.f, 1.f},
-	{0.f, 0.f, 1.f},
-	{0.f, 0.f, 1.f},
+float vertices[] = {
+	 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // Верхний правый
+	 0.5f, -0.5f, 0.0f, 1.0f, 1.0f, // Нижний правый
+	-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // Нижний левый
+	-0.5f,  0.5f, 0.0f, 0.0f, 0.0f // Верхний левый
 };
 
 //timed
@@ -65,10 +51,10 @@ void App::Init(int argn, char** argc)
 
 	appWindow->mouse_wheel_event.attach(appCamera, &Camera::update_Fovy);
 
-	appWindow->key_down_event.attach([] (int64_t code, int64_t) 
-									 { 
+	appWindow->key_down_event.attach([] (int64_t code, int64_t)
+									 {
 										 if (code >= 0 && code < 1024)
-											 appKeys[code] = true; 
+											 appKeys[code] = true;
 									 });
 
 	appWindow->key_down_event.attach([] (int64_t code, int64_t)
@@ -82,10 +68,10 @@ void App::Init(int argn, char** argc)
 											 appWindow->disable_mouse_raw_input();
 									 });
 
-	appWindow->key_up_event.attach([] (int64_t code, int64_t) 
-								   { 
+	appWindow->key_up_event.attach([] (int64_t code, int64_t)
+								   {
 									   if (code >= 0 && code < 1024)
-										   appKeys[code] = false; 
+										   appKeys[code] = false;
 								   });
 
 	appWindow->mouse_raw_input_event.attach([] (int32_t dx, int32_t dy)
@@ -95,17 +81,21 @@ void App::Init(int argn, char** argc)
 																		 0.f);
 											});
 
-	Vao = new tgl::VAO();
-	Vao->add_vertex_buffer(vertexes.data(), vertexes.size() * la::vec3::count());
-	Vao->add_vertex_buffer(colors.data(), vertexes.size() * la::vec3::count());
-	Vao->add_indices_buffer(indices.data(), indices.size());
-
 	ShaderFirst = new tgl::Shader("first");
 	ShaderFirst->bind_attribute(0, "position");
-	ShaderFirst->bind_attribute(1, "color");
 	ShaderFirst->link();
 
+	appTexture = new tgl::Texture("brick/brick_4_diff_2k.jpg");
+	appTexture->bind();
+
+	appMesh = new tgl::Mesh;
+	appMesh->bind();
+	appMesh->add_attribut<3, 2>(sizeof(vertices) / sizeof(float), vertices);
+	appMesh->set_indices(indices.size(), indices.data());
+	appMesh->unbind();
+
 	tgl::gl::glEnable(GL_CULL_FACE);
+	//tgl::gl::glCullFace();
 	tgl::gl::glEnable(GL_DEPTH_TEST);
 
 	float angle = 0.f;
@@ -136,7 +126,6 @@ void App::KeyProcessing()
 		appWindow->destroy();
 }
 
-
 void App::UpdateFrmaeTime()
 {
 	size_t current_time = tgl::win::GetTickCount64();
@@ -154,11 +143,7 @@ void App::Render()
 	tgl::gl::glClearColor(0.f, 0.f, 0.f, 1.f);
 
 	model = la::mat4(1.f);
-	model = la::rotate(model,
-					   la::vec3(std::cosf(angle),
-								std::sinf(angle),
-								std::cosf(angle)),
-					   angle);
+	//model = la::rotate(model, la::vec3(1.f, 1.f, 0.f), angle);
 	angle += 0.5f * FrameTime;
 	view = appCamera->get_view();
 	perspective = appCamera->get_perspective();
@@ -169,8 +154,8 @@ void App::Render()
 
 	//draw section
 	ShaderFirst->use();
-	Vao->draw(GL_TRIANGLES);
 
+	appMesh->draw(GL_TRIANGLES);
 	//section end
 
 	appWindow->swap_buffers();
@@ -221,7 +206,8 @@ void App::Terminate()
 {
 	delete Timer;
 	delete ShaderFirst;
-	delete Vao;
+	delete appMesh;
+	delete appTexture;
 	delete appCamera;
 	delete appWindow;
 }
