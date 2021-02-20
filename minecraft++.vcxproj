@@ -162,7 +162,6 @@
     <ClCompile Include="src\minecraft++.cpp" />
     <ClCompile Include="src\Voxels\Chunk.cpp" />
     <ClCompile Include="src\Voxels\Voxel.cpp" />
-    <ClCompile Include="src\Voxels\VoxelRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\glsl\first.frag" />
@@ -174,7 +173,6 @@
     <ClInclude Include="src\SimpleApp\SimpleApp.h" />
     <ClInclude Include="src\Voxels\Chunk.h" />
     <ClInclude Include="src\Voxels\Voxel.h" />
-    <ClInclude Include="src\Voxels\VoxelRenderer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -31,9 +31,6 @@
     <ClCompile Include="src\Camera\Camera.cpp">
       <Filter>src\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="src\Voxels\VoxelRenderer.cpp">
-      <Filter>src\Voxels</Filter>
-    </ClCompile>
     <ClCompile Include="src\Voxels\Chunk.cpp">
       <Filter>src\Voxels</Filter>
     </ClCompile>
@@ -58,9 +55,6 @@
     </ClInclude>
     <ClInclude Include="src\Camera\Camera.h">
       <Filter>src\Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Voxels\VoxelRenderer.h">
-      <Filter>src\Voxels</Filter>
     </ClInclude>
     <ClInclude Include="src\Voxels\Voxel.h">
       <Filter>src\Voxels</Filter>

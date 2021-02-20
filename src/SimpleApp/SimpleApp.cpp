@@ -5,16 +5,21 @@ std::wstring gTitle{ L"Minecraft++" };
 tgl::View* App::appWindow;
 tgl::Timer* App::Timer;
 tgl::Shader* App::ShaderFirst;
-tgl::Mesh* App::appMesh;
-tgl::Texture* App::appTexture;
+tgl::Texture2D* App::appTexture;
 Camera* App::appCamera;
+
+tgl::TextureAtlas2D* appAtlas;
 
 std::bitset<1024> App::appKeys;
 bool App::appLockCursor = false;
 float App::appMouseSensitivity = 0.025f;
+float appCameraSpeed = 16.f;
 
 size_t App::PrevTime;
 float App::FrameTime;
+
+std::vector<std::unique_ptr<voxel::Chunk>> Chunks;
+voxel::Chunk* appChunk;
 
 //timed
 la::mat4 model;
@@ -33,12 +38,16 @@ float vertices[] = {
 //timed
 float angle = 0.f;//delete this
 
+constexpr auto gWorldWidth = 10;
+constexpr auto gWorldHeight = 1;
+constexpr auto gWorldDepth = 10;
+
 void App::Init(int argn, char** argc)
 {
 	tgl::Init();
 
 	appWindow = new tgl::View(640, 480, gTitle);
-	appCamera = new Camera(la::vec3(0.f, 0.f, 5.f), la::vec3(0.f, 0.f, 0.f), la::vec3(0.f, 1.f, 0.f), 640.f / 480.f, 45.f);
+	appCamera = new Camera(la::vec3(0.f, 11.f, -1.f), la::vec3(0.f, 0.f, 0.f), la::vec3(0.f, 1.f, 0.f), 640.f / 480.f, 45.f);
 
 	appWindow->enale_opengl_context();
 
@@ -81,21 +90,35 @@ void App::Init(int argn, char** argc)
 																		 0.f);
 											});
 
+	appAtlas = new tgl::TextureAtlas2D();
+	std::vector<std::string> diffuse_image = {
+		"res/textures/aerial_grass_rock/aerial_grass_rock_diff_1k.jpg",
+		"res/textures/dirt_aerial_2/dirt_aerial_02_diff_1k.jpg",
+		"res/textures/red_brick_3/red_brick_03_diff_1k.jpg",
+		"res/textures/rocks_ground_2/rocks_ground_02_col_1k.jpg",
+		"res/textures/rocks_ground_6/rocks_ground_06_diff_1k.jpg",
+	};
+	appAtlas->gen<3, 3>(diffuse_image);
+	//appAtlas->bind();
+
 	ShaderFirst = new tgl::Shader("first");
-	ShaderFirst->bind_attribute(0, "position");
 	ShaderFirst->link();
 
-	appTexture = new tgl::Texture("brick/brick_4_diff_2k.jpg");
+	appTexture = new tgl::Texture2D("textures/red_brick_3/red_brick_03_diff_1k.jpg");
 	appTexture->bind();
 
-	appMesh = new tgl::Mesh;
-	appMesh->bind();
-	appMesh->add_attribut<3, 2>(sizeof(vertices) / sizeof(float), vertices);
-	appMesh->set_indices(indices.size(), indices.data());
-	appMesh->unbind();
+	for (auto z = -gWorldDepth / 2; z <= gWorldDepth / 2; ++z)
+		for (auto x = -gWorldWidth / 2; x <= gWorldWidth / 2; ++x)
+		{
+			std::unique_ptr<voxel::Chunk> chunk(new voxel::Chunk(x, 0, z));
+			voxel::Chunk::render(chunk.get());
+			Chunks.push_back(std::move(chunk));
+		}
+
+
 
 	tgl::gl::glEnable(GL_CULL_FACE);
-	//tgl::gl::glCullFace();
+	//tgl::gl::glCullFace(GL_BACK);
 	tgl::gl::glEnable(GL_DEPTH_TEST);
 
 	float angle = 0.f;
@@ -111,19 +134,26 @@ void App::Init(int argn, char** argc)
 void App::KeyProcessing()
 {
 	if (appKeys['W'] || appKeys[VK_UP])
-		*appCamera += appCamera->get_direction() * FrameTime;
-	if (appKeys['S'])
-		*appCamera -= appCamera->get_direction() * FrameTime;
-	if (appKeys['D'])
-		*appCamera += appCamera->get_right() * FrameTime;
-	if (appKeys['A'])
-		*appCamera -= appCamera->get_right() * FrameTime;
+		*appCamera += la::normalize(appCamera->get_direction()) * FrameTime * appCameraSpeed;
+	if (appKeys['S'] || appKeys[VK_DOWN])
+		*appCamera -= la::normalize(appCamera->get_direction()) * FrameTime * appCameraSpeed;
+	if (appKeys['D'] || appKeys[VK_RIGHT])
+		*appCamera += la::normalize(appCamera->get_right()) * FrameTime * appCameraSpeed;
+	if (appKeys['A'] || appKeys[VK_LEFT])
+		*appCamera -= la::normalize(appCamera->get_right()) * FrameTime * appCameraSpeed;
+	if (appKeys[VK_SPACE])
+		*appCamera += la::normalize(appCamera->get_up()) * FrameTime * appCameraSpeed;
+	if (appKeys[VK_SHIFT])
+		*appCamera -= la::normalize(appCamera->get_up()) * FrameTime * appCameraSpeed;
+
 	if (appKeys['Q'] && appLockCursor)
 		appCamera->update_angles(0.f, 0.f, 1.5f * FrameTime);
 	if (appKeys['E'] && appLockCursor)
 		appCamera->update_angles(0.f, 0.f, -1.5f * FrameTime);
+
 	if (appKeys[VK_ESCAPE])
 		appWindow->destroy();
+
 }
 
 void App::UpdateFrmaeTime()
@@ -144,7 +174,7 @@ void App::Render()
 
 	model = la::mat4(1.f);
 	//model = la::rotate(model, la::vec3(1.f, 1.f, 0.f), angle);
-	angle += 0.5f * FrameTime;
+	angle += 1.2f * FrameTime;
 	view = appCamera->get_view();
 	perspective = appCamera->get_perspective();
 
@@ -155,7 +185,8 @@ void App::Render()
 	//draw section
 	ShaderFirst->use();
 
-	appMesh->draw(GL_TRIANGLES);
+	for (auto& e : Chunks)
+		e->draw();
 	//section end
 
 	appWindow->swap_buffers();
@@ -206,7 +237,7 @@ void App::Terminate()
 {
 	delete Timer;
 	delete ShaderFirst;
-	delete appMesh;
+	delete appChunk;
 	delete appTexture;
 	delete appCamera;
 	delete appWindow;

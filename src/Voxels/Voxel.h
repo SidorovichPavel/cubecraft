@@ -2,7 +2,13 @@
 
 #include <stdint.h>
 
-struct voxel
+namespace voxel
 {
-	uint8_t mType;
-};
+	struct voxel
+	{
+		uint8_t mType;
+	};
+
+
+
+}

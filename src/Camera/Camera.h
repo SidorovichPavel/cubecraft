@@ -31,6 +31,7 @@ public:
 	la::mat4 get_view()const noexcept;
 	la::vec3 get_direction() const noexcept;
 	la::vec3 get_right() const noexcept;
+	la::vec3 get_up() const noexcept;
 
 	void update_Fovy(uint16_t _Keys, int16_t _Delta, int32_t x, int32_t y) noexcept;
 	void update_aspect(uint16_t x, uint16_t y)noexcept;

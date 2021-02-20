@@ -1,4 +1,6 @@
 #include "Camera.h"
+#include <corecrt_math.h>
+#include <math.h>
 
 Camera::Camera(const la::vec3 _Pos, const la::vec3 _Target, la::vec3 _Up, const float _Aspect, const float _Fovy)
 	:
@@ -12,7 +14,10 @@ Camera::Camera(const la::vec3 _Pos, const la::vec3 _Target, la::vec3 _Up, const 
 	mPitch(0.f),
 	mYaw(0.f),
 	mRoll(0.f)
-{}
+{
+	//mYaw = acosf(mDirection[0]);
+	//mPitch = acosf(mDirection[1]);
+}
 
 Camera::~Camera()
 {}
@@ -31,7 +36,7 @@ Camera& Camera::operator-=(const la::vec3& _Vec)noexcept
 
 la::mat4 Camera::get_perspective() const noexcept
 {
-	return la::perspeñtive(0.1f, 100.f, mAspect, mFovy);
+	return la::perspeñtive(0.1f, 300.f, mAspect, mFovy);
 }
 
 la::mat4 Camera::get_view() const noexcept
@@ -49,6 +54,11 @@ la::vec3 Camera::get_direction() const noexcept
 la::vec3 Camera::get_right() const noexcept
 {
 	return mRight;
+}
+
+la::vec3 Camera::get_up() const noexcept
+{
+	return mUp;
 }
 
 void Camera::update_Fovy(uint16_t _Keys, int16_t _Delta, int32_t x, int32_t y) noexcept

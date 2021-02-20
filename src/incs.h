@@ -5,3 +5,6 @@
 #include <src/SOIL.h>
 #include <src/SimpleApp/SimpleApp.h>
 #include <src/Camera/Camera.h>
+#include <src/Voxels/Voxel.h>
+#include <src/Voxels/Chunk.h>
+#include <src/Voxels/VoxelRenderer.h>
