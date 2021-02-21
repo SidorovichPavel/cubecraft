@@ -20,6 +20,9 @@
     <Filter Include="src\Voxels">
       <UniqueIdentifier>{9fdd66b0-f68b-489c-8c1d-9a1411981293}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\PerlinNoise">
+      <UniqueIdentifier>{8ed26131-1414-4f52-8fcf-fc4545ebcb09}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\minecraft++.cpp">
@@ -35,6 +38,9 @@
       <Filter>src\Voxels</Filter>
     </ClCompile>
     <ClCompile Include="src\Voxels\Voxel.cpp">
+      <Filter>src\Voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Voxels\Chunks.cpp">
       <Filter>src\Voxels</Filter>
     </ClCompile>
   </ItemGroup>
@@ -60,6 +66,15 @@
       <Filter>src\Voxels</Filter>
     </ClInclude>
     <ClInclude Include="src\Voxels\Chunk.h">
+      <Filter>src\Voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PerlinNoise\PerlinNoise.h">
+      <Filter>src\PerlinNoise</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Voxels\Chunks.h">
+      <Filter>src\Voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Voxels\VoxUtils.h">
       <Filter>src\Voxels</Filter>
     </ClInclude>
   </ItemGroup>

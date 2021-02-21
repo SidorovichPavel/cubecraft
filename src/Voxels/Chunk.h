@@ -41,7 +41,7 @@ namespace voxel
 		~Chunk();
 
 		static void push_data(const std::array<float, gVertexSize * 4>& _VertexData);
-		static void render(Chunk* _Chunk);
+		static void render(Chunk& _Chunk);
 
 		void set_neighbors(const Chunk* _R, const Chunk* _L,
 						   const Chunk* _U, const Chunk* _D,

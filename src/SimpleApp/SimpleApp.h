@@ -12,6 +12,8 @@
 class App
 {
 private:
+	static voxel::Chunks* appChunks;
+
 	static tgl::View* appWindow;
 	static tgl::Timer* Timer;
 	static tgl::Shader* ShaderFirst;
@@ -24,8 +26,11 @@ private:
 
 	static size_t PrevTime;
 	static float FrameTime;
-	static void UpdateFrmaeTime();
+
+	static void BindEvents();
+	static void DetachEvents();
 	static void Render();
+	static void UpdateFrmaeTime();
 	static void KeyProcessing();
 public:
 	static void Init(int argn, char** argc);

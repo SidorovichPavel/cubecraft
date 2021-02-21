@@ -1,6 +1,7 @@
 #include <src/Voxels/Chunk.h>
 #include <algorithm>
 #include <iterator>
+#include <src/PerlinNoise/PerlinNoise.h>
 
 #pragma warning(disable:26451)
 
@@ -9,19 +10,31 @@ namespace voxel
 
 	Chunk::Chunk(int32_t _GX, int32_t _GY, int32_t _GZ)
 		:
-		mGlobalX(_GX * CHUNK_WIDTH),
-		mGlobalY(_GY * CHUNK_HEIGHT),
-		mGlobalZ(_GZ * CHUNK_DEPTH),
+		mGlobalX(_GX* CHUNK_WIDTH),
+		mGlobalY(_GY* CHUNK_HEIGHT),
+		mGlobalZ(_GZ* CHUNK_DEPTH),
 		mMesh(nullptr)
 	{
 		std::fill(mNeighbors.begin(), mNeighbors.end(), nullptr);
-
 		mVoxels.resize(VOLUME);
-		auto it = mVoxels.begin();
-		for (auto y = 0; y < CHUNK_HEIGHT; ++y)
-			for (auto z = 0; z < CHUNK_DEPTH; ++z)
-				for (auto x = 0; x < CHUNK_WIDTH; ++x, ++it)
-					mVoxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].mType = y <= (sinf((mGlobalX + x)) * 0.5 + 0.5f) * 10;
+
+		siv::PerlinNoise perlin(std::random_device{});
+
+		for (auto z = 0; z < CHUNK_DEPTH; ++z)
+			for (auto x = 0; x < CHUNK_WIDTH; ++x)
+			{
+				float height =
+					//(std::cosf((mGlobalX + x)*0.6f) * 0.5f + 0.5f) * 10.f;
+					static_cast<float>(perlin.normalizedOctaveNoise3D_0_1((mGlobalX + x) * 0.335f, (mGlobalZ + z) * 0.135f, 3.f, 7));
+				height *= 10;
+				height += 5;
+				for (auto y = 0; y < CHUNK_HEIGHT; ++y)
+				{
+					uint8_t id = (mGlobalY + y) <= static_cast<int32_t>(height);
+
+					mVoxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].mType = id;
+				}
+			}
 	}
 
 	Chunk::~Chunk()
@@ -91,14 +104,27 @@ namespace voxel
 		staticIndices.push_back(index + 0);
 	}
 
-	void Chunk::render(Chunk* _Chunk)
+	void Chunk::render(Chunk& _Chunk)
 	{
 		staticBuffer.clear();
 		staticIndices.clear();
 
-		decltype(auto) chunk = *_Chunk;
+		decltype(auto) chunk = _Chunk;
 
 		std::array<float, 4 * gVertexSize> vertex_data;
+
+		auto add_to_mesh = [&] (int x, int y, int z, int i)
+		{
+			for (auto counter = 0; counter < 4; ++counter)
+			{
+				vertex_data[counter * gVertexSize + 0] = chunk.mGlobalX + x + staticOffsets[i][counter][0];
+				vertex_data[counter * gVertexSize + 1] = chunk.mGlobalY + y + staticOffsets[i][counter][1];
+				vertex_data[counter * gVertexSize + 2] = chunk.mGlobalZ + z + staticOffsets[i][counter][2];
+				vertex_data[counter * gVertexSize + 3] = staticOffsets[i][counter][3];
+				vertex_data[counter * gVertexSize + 4] = staticOffsets[i][counter][4];
+			}
+			push_data(vertex_data);
+		};
 
 		for (auto y = 0; y < CHUNK_HEIGHT; ++y)
 			for (auto z = 0; z < CHUNK_DEPTH; ++z)
@@ -115,18 +141,37 @@ namespace voxel
 							yy = y + staticDirections[i][1],
 							zz = z + staticDirections[i][2];
 
-						if ((xx < 0 || xx >= CHUNK_WIDTH || yy < 0 || yy >= CHUNK_HEIGHT || zz < 0 || zz >= CHUNK_DEPTH) ||
-							!chunk[(yy * CHUNK_DEPTH + zz) * CHUNK_WIDTH + xx].mType)
+						if (!(xx < 0 || xx >= CHUNK_WIDTH || yy < 0 || yy >= CHUNK_HEIGHT || zz < 0 || zz >= CHUNK_DEPTH))
 						{
-							for (auto counter = 0; counter < 4; ++counter)
+							if (!chunk[(yy * CHUNK_DEPTH + zz) * CHUNK_WIDTH + xx].mType)
 							{
-								vertex_data[counter * gVertexSize + 0] = chunk.mGlobalX + x + staticOffsets[i][counter][0];
-								vertex_data[counter * gVertexSize + 1] = chunk.mGlobalY + y + staticOffsets[i][counter][1];
-								vertex_data[counter * gVertexSize + 2] = chunk.mGlobalZ + z + staticOffsets[i][counter][2];
-								vertex_data[counter * gVertexSize + 3] = staticOffsets[i][counter][3];
-								vertex_data[counter * gVertexSize + 4] = staticOffsets[i][counter][4];
+								add_to_mesh(x, y, z, i);
 							}
-							push_data(vertex_data);
+						}
+						else
+						{
+							if (chunk.mNeighbors[i])
+							{
+								auto select_coord = [] (int coord, int dir)
+								{
+									switch (dir)
+									{
+									case -1: return 15;
+									case 0: return coord;
+									case 1: return 0;
+									}
+									return coord;
+								};
+								
+								auto _x = select_coord(x, staticDirections[i][0]);
+								auto _y = select_coord(y, staticDirections[i][1]);
+								auto _z = select_coord(z, staticDirections[i][2]);
+
+								if (!(*chunk.mNeighbors[i])[(_y * CHUNK_DEPTH + _z) * CHUNK_WIDTH + _x].mType)
+								{
+									add_to_mesh(x, y, z, i);
+								}
+							}
 						}
 					}
 				}
