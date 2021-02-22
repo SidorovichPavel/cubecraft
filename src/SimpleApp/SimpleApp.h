@@ -1,11 +1,5 @@
 #pragma once
 
-#include <functional>
-#include <condition_variable>
-#include <thread>
-#include <atomic>
-#include <mutex>
-
 #include <bitset>
 #include <src/incs.h>
 

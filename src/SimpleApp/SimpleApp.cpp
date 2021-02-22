@@ -3,7 +3,6 @@
 
 std::wstring gTitle{ L"Minecraft++" };
 tgl::View* App::appWindow;
-tgl::Timer* App::Timer;
 tgl::Shader* App::ShaderFirst;
 tgl::Texture2D* App::appTexture;
 Camera* App::appCamera;
@@ -87,8 +86,8 @@ void App::Init(int argn, char** argc)
 	tgl::Init();
 
 	appWindow = new tgl::View(640, 480, gTitle);
-	appCamera = new Camera(la::vec3(0.f, 10.f, -1.f), la::vec3(0.f, 10.f, 0.f), la::vec3(0.f, 1.f, 0.f), 640.f / 480.f, 45.f);
-
+	appCamera = new Camera(la::vec3({ 0.f, 10.f, 1.f }), la::vec3({ 0.f, 10.f, 0.f }), la::vec3({ 0.f, 1.f, 0.f }), 640.f / 480.f, 45.f);
+	appCamera->use_quaternoins();
 	appWindow->enale_opengl_context();
 
 	::App::BindEvents();
@@ -153,9 +152,9 @@ void App::KeyProcessing()
 	if (appKeys[VK_SHIFT])
 		*appCamera -= la::normalize(appCamera->get_up()) * FrameTime * appCameraSpeed;
 
-	if (appKeys['Q'] && appLockCursor && false)
+	if (appKeys['Q'] && appLockCursor && true)
 		appCamera->update_angles(0.f, 0.f, 1.5f * FrameTime);
-	if (appKeys['E'] && appLockCursor && false)
+	if (appKeys['E'] && appLockCursor && true)
 		appCamera->update_angles(0.f, 0.f, -1.5f * FrameTime);
 
 	if (appKeys[VK_ESCAPE])
@@ -238,7 +237,6 @@ int App::Run()
 
 void App::Terminate()
 {
-	delete Timer;
 	delete ShaderFirst;
 	delete appChunks;
 	delete appTexture;

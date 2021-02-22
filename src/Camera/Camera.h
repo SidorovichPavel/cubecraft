@@ -17,6 +17,8 @@ class Camera
 	float mYaw;
 	float mRoll;
 
+	bool useQuaternions;
+
 	void update_vertors() noexcept;
 public:
 	Camera(const la::vec3 _Pos, const la::vec3 _Targe, la::vec3 _Up, const float _Aspect, const float _Fovy);
@@ -36,5 +38,6 @@ public:
 	void update_Fovy(uint16_t _Keys, int16_t _Delta, int32_t x, int32_t y) noexcept;
 	void update_aspect(uint16_t x, uint16_t y)noexcept;
 	void update_angles(float x, float y, float z);
+	void use_quaternoins(bool _mode = true);
 };
 

@@ -7,13 +7,14 @@ Camera::Camera(const la::vec3 _Pos, const la::vec3 _Target, la::vec3 _Up, const 
 	mPosition(_Pos),
 	mDirection(la::normalize(_Target - _Pos)),
 	mUp(_Up),
-	mRight(mDirection * mUp),
+	mRight(mDirection* mUp),
 	mAspect(_Aspect),
 	mFovy(_Fovy),
 	mRotate(la::mat4(1.f)),
 	mPitch(0.f),
 	mYaw(0.f),
-	mRoll(0.f)
+	mRoll(0.f),
+	useQuaternions(false)
 {
 	//mYaw = acosf(mDirection[0]);
 	//mPitch = acosf(mDirection[1]);
@@ -81,18 +82,38 @@ void Camera::update_aspect(uint16_t x, uint16_t y)noexcept
 
 void Camera::update_vertors() noexcept
 {
-	mDirection = la::vec3(mRotate * la::vec4(0.f, 0.f, -1.f, 1.f));
-	mRight = la::vec3(mRotate * la::vec4(1.f, 0.f, 0.f, 1.f));
-	mUp = la::vec3(mRotate * la::vec4(0.f, 1.f, 0.f, 1.f));
+	mDirection = la::vec3(mRotate * la::vec4({ 0.f, 0.f, -1.f, 1.f }));
+	mRight = la::vec3(mRotate * la::vec4({ 1.f, 0.f, 0.f, 1.f }));
+	mUp = la::vec3(mRotate * la::vec4({ 0.f, 1.f, 0.f, 1.f }));
 }
 
 //angle pls in radians
 void Camera::update_angles(float _Pitch, float _Yaw, float _Roll)
 {
 	mPitch += _Pitch; mYaw += _Yaw; mRoll += _Roll;
-	mRotate = la::mat4(1.f);
-	mRotate = la::rotate(mRotate, la::vec3(0.f, 0.f, 1.f), mRoll);
-	mRotate = la::rotate(mRotate, la::vec3(0.f, 1.f, 0.f), mYaw);
-	mRotate = la::rotate(mRotate, la::vec3(1.f, 0.f, 0.f), mPitch);
-	update_vertors();
+
+	if (useQuaternions)
+	{
+		la::Quaternion qx(mRight, _Pitch);
+		la::Quaternion qy(mUp, _Yaw);
+		la::Quaternion qz(mDirection, -_Roll);
+
+		auto q = qx * qy * qz;
+		mDirection = mDirection * q;
+		mRight = mRight * q;
+		mUp = mUp * q;
+	}
+	else
+	{
+		mRotate = la::mat4(1.f);
+		mRotate = la::rotate(mRotate, la::vec3({ 0.f, 0.f, 1.f }), mRoll);
+		mRotate = la::rotate(mRotate, la::vec3({ 0.f, 1.f, 0.f }), mYaw);
+		mRotate = la::rotate(mRotate, la::vec3({ 1.f, 0.f, 0.f }), mPitch);
+		update_vertors();
+	}
+}
+
+void Camera::use_quaternoins(bool _mode)
+{
+	useQuaternions = _mode;
 }
