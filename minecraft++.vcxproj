@@ -167,6 +167,8 @@
   <ItemGroup>
     <None Include="res\glsl\first.frag" />
     <None Include="res\glsl\first.vert" />
+    <None Include="res\glsl\mine.frag" />
+    <None Include="res\glsl\mine.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Camera\Camera.h" />

@@ -62,6 +62,11 @@ la::vec3 Camera::get_up() const noexcept
 	return mUp;
 }
 
+la::vec3 Camera::get_position() const noexcept
+{
+	return mPosition;
+}
+
 void Camera::update_Fovy(uint16_t _Keys, int16_t _Delta, int32_t x, int32_t y) noexcept
 {
 	if (_Delta > 0)

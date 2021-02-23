@@ -11,7 +11,10 @@ private:
 	static tgl::View* appWindow;
 	static tgl::Timer* Timer;
 	static tgl::Shader* ShaderFirst;
+	static tgl::Shader* MineShader;
+	static tgl::Mesh* WhiteCube;
 	static tgl::Texture2D* appTexture;
+	static tgl::Texture2D* appTexture2;
 	static Camera* appCamera;
 
 	static std::bitset<1024> appKeys;

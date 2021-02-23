@@ -1,10 +1,15 @@
 #include <src/SimpleApp/SimpleApp.h>
 #include <assert.h>
+#include <iostream>
 
 std::wstring gTitle{ L"Minecraft++" };
 tgl::View* App::appWindow;
 tgl::Shader* App::ShaderFirst;
+tgl::Shader* App::MineShader;
+tgl::Mesh* App::WhiteCube;
 tgl::Texture2D* App::appTexture;
+tgl::Texture2D* App::appTexture2;
+tgl::Texture2D* appTexture3;
 Camera* App::appCamera;
 
 tgl::TextureAtlas2D* appAtlas;
@@ -18,6 +23,7 @@ size_t App::PrevTime;
 float App::FrameTime;
 
 voxel::Chunks* App::appChunks;
+
 //timed
 la::mat4 model;
 la::mat4 perspective;
@@ -35,6 +41,22 @@ constexpr Cube gWorldCube{ -2,3,0,1,-2,3 };
 constexpr auto gWorldWidth = gWorldCube.x1 - gWorldCube.x0;
 constexpr auto gWorldHeight = gWorldCube.y1 - gWorldCube.y0;
 constexpr auto gWorldDepth = gWorldCube.z1 - gWorldCube.z0;
+
+std::vector<unsigned> indices{ 0,1,2,1,0,3,6,5,4,7,4,5,2,6,0,0,6,4,1,3,5,5,3,7,0,4,3,3,4,7,5,6,1,1,6,2};
+
+std::vector<la::vec3> vertexes{
+	{  .5f,  .5f, .5f },
+	{ -.5f, -.5f, .5f },
+	{  .5f, -.5f, .5f },
+	{ -.5f,  .5f, .5f },
+	{  .5f,  .5f, -.5f },
+	{ -.5f, -.5f, -.5f },
+	{  .5f, -.5f, -.5f },
+	{ -.5f,  .5f, -.5f },
+};
+
+
+
 
 void App::BindEvents()
 {
@@ -81,6 +103,54 @@ void App::BindEvents()
 
 }
 
+void callback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, char const* message, void const* user_param)
+{
+	auto source_str = [source] () -> std::string {
+		switch (source)
+		{
+		case GL_DEBUG_SOURCE_API: return "API";
+		case GL_DEBUG_SOURCE_WINDOW_SYSTEM: return "WINDOW SYSTEM";
+		case GL_DEBUG_SOURCE_SHADER_COMPILER: return "SHADER COMPILER";
+		case GL_DEBUG_SOURCE_THIRD_PARTY:  return "THIRD PARTY";
+		case GL_DEBUG_SOURCE_APPLICATION: return "APPLICATION";
+		case GL_DEBUG_SOURCE_OTHER: return "OTHER";
+		default: return "UNKNOWN";
+		}
+	}();
+
+	auto type_str = [type] () {
+		switch (type)
+		{
+		case GL_DEBUG_TYPE_ERROR: return "ERROR";
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "DEPRECATED_BEHAVIOR";
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: return "UNDEFINED_BEHAVIOR";
+		case GL_DEBUG_TYPE_PORTABILITY: return "PORTABILITY";
+		case GL_DEBUG_TYPE_PERFORMANCE: return "PERFORMANCE";
+		case GL_DEBUG_TYPE_MARKER:  return "MARKER";
+		case GL_DEBUG_TYPE_OTHER: return "OTHER";
+		default: return "UNKNOWN";
+		}
+	}();
+
+	auto severity_str = [severity] () {
+		switch (severity) {
+		case GL_DEBUG_SEVERITY_NOTIFICATION: return "NOTIFICATION";
+		case GL_DEBUG_SEVERITY_LOW: return "LOW";
+		case GL_DEBUG_SEVERITY_MEDIUM: return "MEDIUM";
+		case GL_DEBUG_SEVERITY_HIGH: return "HIGH";
+		default: return "UNKNOWN";
+		}
+	}();
+
+	std::cout << source_str << ", "
+		<< type_str << ", "
+		<< severity_str << ", "
+		<< id << ": "
+		<< message << std::endl;
+}
+
+uint32_t light_cube_vao, light_cube_vbo, light_cube_veo;
+
 void App::Init(int argn, char** argc)
 {
 	tgl::Init();
@@ -106,11 +176,33 @@ void App::Init(int argn, char** argc)
 	//appAtlas->gen<16, 16>(diffuse_image);
 	//appAtlas->bind();
 
+	tgl::gl::glEnable(GL_DEBUG_OUTPUT);
+	tgl::gl::DebugMessageCallback(callback, nullptr);
+
+	MineShader = new tgl::Shader("mine");
+	MineShader->link();
+
+	MineShader->use();
+	MineShader->uniform_int("material.diffuse", 0);
+	tgl::gl::ActiveTexture(GL_TEXTURE0);
+	appTexture = new tgl::Texture2D("textures/red_brick_3/red_brick_03_diff_1k.jpg");
+	appTexture->bind();
+
+	MineShader->uniform_int("material.normal", 1);
+	tgl::gl::ActiveTexture(GL_TEXTURE1);
+	appTexture2 = new tgl::Texture2D("textures/red_brick_3/red_brick_03_nor_1k.jpg");
+	appTexture2->bind();
+	MineShader->uniform_int("material.specular", 2);
+	tgl::gl::ActiveTexture(GL_TEXTURE3);
+	appTexture3 = new tgl::Texture2D("textures/red_brick_3/red_brick_03_spec_1k.jpg");
+	appTexture3->bind();
+
 	ShaderFirst = new tgl::Shader("first");
 	ShaderFirst->link();
 
-	appTexture = new tgl::Texture2D("textures/red_brick_3/red_brick_03_diff_1k.jpg");
-	appTexture->bind();
+	WhiteCube = new tgl::Mesh();
+	WhiteCube->add_attribut<3>(vertexes.size() * 3, (float*)vertexes.data());
+	WhiteCube->set_indices(indices.size(), indices.data());
 
 	appChunks = new voxel::Chunks(gWorldWidth, gWorldHeight, gWorldDepth);
 
@@ -124,7 +216,7 @@ void App::Init(int argn, char** argc)
 	for (auto& chunk : *appChunks)
 		voxel::Chunk::render(chunk);
 
-	tgl::gl::glEnable(GL_CULL_FACE);
+	//tgl::gl::glEnable(GL_CULL_FACE);
 	//tgl::gl::glCullFace(GL_BACK);
 	tgl::gl::glEnable(GL_DEPTH_TEST);
 
@@ -181,15 +273,32 @@ void App::Render()
 	model = la::mat4(1.f);
 	view = appCamera->get_view();
 	perspective = appCamera->get_perspective();
-	auto transform = perspective * view * model;
-	ShaderFirst->uniform_matrix4f("transform", transform.data());
 
-	//draw section
-	ShaderFirst->use();
+	auto transform = perspective * view * model;
+	auto camera_mat4 = perspective * view;
+
+	la::vec3 light_pos = la::vec3
+	{
+		100 * cosf(la::rad(tgl::win::GetTickCount64() / 100)),
+		100 * sinf(la::rad(tgl::win::GetTickCount64() / 100)),
+		100 * cosf(la::rad(tgl::win::GetTickCount64() / 20000.f)) * sinf(la::rad(tgl::win::GetTickCount64()) / 10000.f)
+	};
+	la::vec3 light_pos2{ 0,55,0 };
+
+	MineShader->use();
+	MineShader->uniform_matrix4f("transform", transform.data());
+	MineShader->uniform_vector3f("light_pos", light_pos2.data());//light_pos.data());//appCamera->get_position().data());
+	MineShader->uniform_vector3f("light_color", la::vec3(1.f).data());
+
 	for (auto& e : *appChunks)
 		e.draw();
 
-	//section end
+	model = la::translate(model, light_pos2);
+
+	transform = perspective * view * model;
+	ShaderFirst->use();
+	ShaderFirst->uniform_matrix4f("transform", transform.data());
+	WhiteCube->draw(GL_TRIANGLES);
 
 	appWindow->swap_buffers();
 }
@@ -238,8 +347,12 @@ int App::Run()
 void App::Terminate()
 {
 	delete ShaderFirst;
+	delete MineShader;
 	delete appChunks;
 	delete appTexture;
+	delete appTexture2;
+	delete appTexture3;
+	delete appAtlas;
 	delete appCamera;
 	delete appWindow;
 }

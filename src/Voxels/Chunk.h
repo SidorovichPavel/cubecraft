@@ -8,9 +8,8 @@
 
 namespace voxel
 {
-
 	constexpr auto CHUNK_WIDTH = 16;
-	constexpr auto CHUNK_HEIGHT = 16;
+	constexpr auto CHUNK_HEIGHT = 128;
 	constexpr auto CHUNK_DEPTH = 16;
 	constexpr auto VOLUME = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH;
 
@@ -21,7 +20,8 @@ namespace voxel
 		MultiCore,
 	};
 
-	constexpr auto gVertexSize = (3 + 2);
+	constexpr auto gVertexSize = (3 + 3 + 2);
+	#define attrib_pack 3,3,2
 
 	class Chunk
 	{

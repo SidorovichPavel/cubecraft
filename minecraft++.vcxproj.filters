@@ -51,6 +51,12 @@
     <None Include="res\glsl\first.frag">
       <Filter>res\glsl</Filter>
     </None>
+    <None Include="res\glsl\mine.vert">
+      <Filter>res\glsl</Filter>
+    </None>
+    <None Include="res\glsl\mine.frag">
+      <Filter>res\glsl</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\SimpleApp\SimpleApp.h">

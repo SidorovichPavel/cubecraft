@@ -25,8 +25,8 @@ namespace voxel
 			{
 				float height =
 					//(std::cosf((mGlobalX + x)*0.6f) * 0.5f + 0.5f) * 10.f;
-					static_cast<float>(perlin.normalizedOctaveNoise3D_0_1((mGlobalX + x) * 0.335f, (mGlobalZ + z) * 0.135f, 3.f, 7));
-				height *= 10;
+					static_cast<float>(perlin.normalizedOctaveNoise3D_0_1((mGlobalX + x) * 2.735f, (mGlobalZ + z) * 0.235f, (mGlobalY) * 0.05f, 7));
+				height *= 10.f;
 				height += 5;
 				for (auto y = 0; y < CHUNK_HEIGHT; ++y)
 				{
@@ -81,10 +81,10 @@ namespace voxel
 		{ 0.5f,  0.5f,  0.5f, 1.f, 0.f },
 		},
 		{
-		{-0.5f,  0.5f, -0.5f, 0.f, 0.f },
-		{ 0.5f,  0.5f, -0.5f, 0.f, 1.f },
-		{ 0.5f, -0.5f, -0.5f, 1.f, 1.f },
-		{-0.5f, -0.5f, -0.5f, 1.f, 0.f },
+		{ 0.5f,  0.5f, -0.5f, 0.f, 0.f },
+		{ 0.5f, -0.5f, -0.5f, 0.f, 1.f },
+		{-0.5f, -0.5f, -0.5f, 1.f, 1.f },
+		{-0.5f,  0.5f, -0.5f, 1.f, 0.f },
 		}
 	};
 	std::vector<float> Chunk::staticBuffer;
@@ -115,13 +115,21 @@ namespace voxel
 
 		auto add_to_mesh = [&] (int x, int y, int z, int i)
 		{
+			la::vec3 normal;
+			normal[0] = static_cast<float>(staticDirections[i][0]);
+			normal[1] = static_cast<float>(staticDirections[i][1]);
+			normal[2] = static_cast<float>(staticDirections[i][2]);
+			
 			for (auto counter = 0; counter < 4; ++counter)
 			{
 				vertex_data[counter * gVertexSize + 0] = chunk.mGlobalX + x + staticOffsets[i][counter][0];
 				vertex_data[counter * gVertexSize + 1] = chunk.mGlobalY + y + staticOffsets[i][counter][1];
 				vertex_data[counter * gVertexSize + 2] = chunk.mGlobalZ + z + staticOffsets[i][counter][2];
-				vertex_data[counter * gVertexSize + 3] = staticOffsets[i][counter][3];
-				vertex_data[counter * gVertexSize + 4] = staticOffsets[i][counter][4];
+				vertex_data[counter * gVertexSize + 3] = normal[0];
+				vertex_data[counter * gVertexSize + 4] = normal[1];
+				vertex_data[counter * gVertexSize + 5] = normal[2];
+				vertex_data[counter * gVertexSize + 6] = staticOffsets[i][counter][3];
+				vertex_data[counter * gVertexSize + 7] = staticOffsets[i][counter][4];
 			}
 			push_data(vertex_data);
 		};
@@ -162,7 +170,7 @@ namespace voxel
 									}
 									return coord;
 								};
-								
+
 								auto _x = select_coord(x, staticDirections[i][0]);
 								auto _y = select_coord(y, staticDirections[i][1]);
 								auto _z = select_coord(z, staticDirections[i][2]);
@@ -178,7 +186,7 @@ namespace voxel
 
 		auto result = new tgl::Mesh();
 		result->bind();
-		result->add_attribut<3, 2>(staticBuffer.size(), staticBuffer.data());
+		result->add_attribut<attrib_pack>(staticBuffer.size(), staticBuffer.data());
 		result->set_indices(staticIndices.size(), staticIndices.data());
 		delete chunk.mMesh;
 		chunk.mMesh = result;
