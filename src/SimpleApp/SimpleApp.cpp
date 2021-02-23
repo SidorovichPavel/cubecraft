@@ -284,7 +284,7 @@ void App::Render()
 		100 * cosf(la::rad(tgl::win::GetTickCount64() / 20000.f)) * sinf(la::rad(tgl::win::GetTickCount64()) / 10000.f)
 	};
 	la::vec3 light_pos2{ 0,55,0 };
-
+	
 	MineShader->use();
 	MineShader->uniform_matrix4f("transform", transform.data());
 	MineShader->uniform_vector3f("light_pos", light_pos2.data());//light_pos.data());//appCamera->get_position().data());
