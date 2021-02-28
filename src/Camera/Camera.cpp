@@ -1,16 +1,16 @@
 #include "Camera.h"
-#include <corecrt_math.h>
-#include <math.h>
+#include <src/glm/ext.hpp>
+#include <src/glm/matrix.hpp>
 
-Camera::Camera(const la::vec3 _Pos, const la::vec3 _Target, la::vec3 _Up, const float _Aspect, const float _Fovy)
+Camera::Camera(const glm::vec3 _Pos, const glm::vec3 _Target, glm::vec3 _Up, const float _Aspect, const float _Fovy)
 	:
 	mPosition(_Pos),
-	mDirection(la::normalize(_Target - _Pos)),
+	mDirection(glm::normalize(_Target - _Pos)),
 	mUp(_Up),
 	mRight(mDirection* mUp),
 	mAspect(_Aspect),
 	mFovy(_Fovy),
-	mRotate(la::mat4(1.f)),
+	mRotate(glm::mat4(1.f)),
 	mPitch(0.f),
 	mYaw(0.f),
 	mRoll(0.f),
@@ -23,51 +23,51 @@ Camera::Camera(const la::vec3 _Pos, const la::vec3 _Target, la::vec3 _Up, const 
 Camera::~Camera()
 {}
 
-Camera& Camera::operator+=(const la::vec3& _Vec)noexcept
+Camera& Camera::operator+=(const glm::vec3& _Vec)noexcept
 {
 	mPosition += _Vec;
 	return *this;
 }
 
-Camera& Camera::operator-=(const la::vec3& _Vec)noexcept
+Camera& Camera::operator-=(const glm::vec3& _Vec)noexcept
 {
 	mPosition -= _Vec;
 	return *this;
 }
 
-la::mat4 Camera::get_perspective() const noexcept
+glm::mat4 Camera::get_perspective() const noexcept
 {
-	return la::perspeñtive(0.1f, 300.f, mAspect, mFovy);
+	return glm::perspective(mFovy, mAspect, 0.1f, 300.f);
 }
 
-la::mat4 Camera::get_view() const noexcept
+glm::mat4 Camera::get_view() const noexcept
 {
-	return la::lock_at(mPosition,
+	return glm::lookAt(mPosition,
 					   mPosition + mDirection,
 					   mUp);
 }
 
-la::mat4 Camera::get_mat4() const noexcept
+glm::mat4 Camera::get_mat4() const noexcept
 {
 	return get_perspective() * get_view();
 }
 
-la::vec3 Camera::get_direction() const noexcept
+glm::vec3 Camera::get_direction() const noexcept
 {
 	return mDirection;
 }
 
-la::vec3 Camera::get_right() const noexcept
+glm::vec3 Camera::get_right() const noexcept
 {
 	return mRight;
 }
 
-la::vec3 Camera::get_up() const noexcept
+glm::vec3 Camera::get_up() const noexcept
 {
 	return mUp;
 }
 
-la::vec3 Camera::get_position() const noexcept
+glm::vec3 Camera::get_position() const noexcept
 {
 	return mPosition;
 }
@@ -92,35 +92,21 @@ void Camera::update_aspect(uint16_t x, uint16_t y)noexcept
 
 void Camera::update_vertors() noexcept
 {
-	mDirection = la::vec3(mRotate * la::vec4({ 0.f, 0.f, -1.f, 1.f }));
-	mRight = la::vec3(mRotate * la::vec4({ 1.f, 0.f, 0.f, 1.f }));
-	mUp = la::vec3(mRotate * la::vec4({ 0.f, 1.f, 0.f, 1.f }));
+	mDirection = glm::vec3(mRotate * glm::vec4({ 0.f, 0.f, -1.f, 1.f }));
+	mRight = glm::vec3(mRotate * glm::vec4({ 1.f, 0.f, 0.f, 1.f }));
+	mUp = glm::vec3(mRotate * glm::vec4({ 0.f, 1.f, 0.f, 1.f }));
 }
 
 //angle pls in radians
 void Camera::update_angles(float _Pitch, float _Yaw, float _Roll)
 {
 	mPitch += _Pitch; mYaw += _Yaw; mRoll += _Roll;
+	mRotate = glm::mat4(1.f);
 
-	if (useQuaternions)
-	{
-		la::Quaternion qx(mRight, _Pitch);
-		la::Quaternion qy(mUp, _Yaw);
-		la::Quaternion qz(mDirection, -_Roll);
-
-		auto q = qx * qy * qz;
-		mDirection = mDirection * q;
-		mRight = mRight * q;
-		mUp = mUp * q;
-	}
-	else
-	{
-		mRotate = la::mat4(1.f);
-		mRotate = la::rotate(mRotate, la::vec3({ 0.f, 0.f, 1.f }), mRoll);
-		mRotate = la::rotate(mRotate, la::vec3({ 0.f, 1.f, 0.f }), mYaw);
-		mRotate = la::rotate(mRotate, la::vec3({ 1.f, 0.f, 0.f }), mPitch);
-		update_vertors();
-	}
+	mRotate = glm::rotate(mRotate, mRoll, glm::vec3({ 0.f, 0.f, 1.f }));
+	mRotate = glm::rotate(mRotate, mYaw, glm::vec3({ 0.f, 1.f, 0.f }));
+	mRotate = glm::rotate(mRotate, mPitch, glm::vec3({ 1.f, 0.f, 0.f }));
+	update_vertors();
 }
 
 void Camera::use_quaternoins(bool _mode)

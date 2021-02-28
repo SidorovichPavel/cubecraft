@@ -111,7 +111,7 @@ namespace voxel
 		auto ly = _Y - (y << Chunk::HEIGHT_SHIFT);
 		auto lz = _Z - (z << Chunk::DEPTH_SHIFT);
 
-		if (lx < 0 || lx >= Chunk::WIDTH || ly < 0 || ly >= Chunk::WIDTH || lz < 0 || lz >= Chunk::DEPTH)
+		if (lx < 0 || lx >= Chunk::WIDTH || ly < 0 || ly >= Chunk::HEIGHT || lz < 0 || lz >= Chunk::DEPTH)
 			return nullptr;
 
 		decltype(auto) chunk = (*this)[cx][cy][cz];
@@ -140,7 +140,7 @@ namespace voxel
 		auto ly = _Y - (y << Chunk::HEIGHT_SHIFT);
 		auto lz = _Z - (z << Chunk::DEPTH_SHIFT);
 
-		if (lx < 0 || lx >= Chunk::WIDTH || ly < 0 || ly >= Chunk::WIDTH || lz < 0 || lz >= Chunk::DEPTH)
+		if (lx < 0 || lx >= Chunk::WIDTH || ly < 0 || ly >= Chunk::HEIGHT || lz < 0 || lz >= Chunk::DEPTH)
 			return;
 
 		decltype(auto) chunk = (*this)[cx][cy][cz];
@@ -161,17 +161,34 @@ namespace voxel
 			chunk.mNeighbors[5])		chunk.mNeighbors[5]->mNeedUpdate = true;
 	}
 
-	Voxel* Chunks::ray_cast(const la::vec3& src, const la::vec3& dir,
+	Voxel* Chunks::ray_cast(const glm::vec3& src, const glm::vec3& dir,
 							float maxDist,
-							la::vec3& end, la::vec3& norm, la::vec3& iend)
+							glm::vec3& end, glm::vec3& norm, glm::vec3& iend)
 	{
-		float px = src[0];
-		float py = src[1];
-		float pz = src[2];
+		auto box_intersect = [] (const glm::vec3& _Ray_Pos, const glm::vec3& _Dir,
+								 const glm::vec3& _Size, glm::vec3& _Normal) -> glm::vec2
+		{
+			glm::vec3 inv_dir = 1.f / _Dir;
+			glm::vec3 n = inv_dir * _Dir;
+			glm::vec3 k = abs(inv_dir) * _Size;
+			glm::vec3 t1 = -n - k;
+			glm::vec3 t2 = -n + k;
+			float tn = fmaxf(fmaxf(t1.x, t1.y), t1.z);
+			float tf = fminf(fminf(t2.x, t2.y), t2.z);
 
-		float dx = dir[0];
-		float dy = dir[1];
-		float dz = dir[2];
+			if (tn > tf || tf < 0.f)return glm::vec2{ -1.0,0.f };
+
+			return glm::vec2();
+		};
+
+
+		float px = src.x;
+		float py = src.y;
+		float pz = src.z;
+
+		float dx = dir.x;
+		float dy = dir.y;
+		float dz = dir.z;
 
 		float t = 0.0f;
 		int ix = static_cast<int>(floor(px));

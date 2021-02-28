@@ -1,6 +1,6 @@
 #include <src/LineBatch/LineBatch.h>
 
-std::vector<la::vec3> LineBatch::staticDirections = {
+std::vector<glm::vec3> LineBatch::staticDirections = {
 	{ 1.f, 1.f, 1.f },
 	{ 1.f,-1.f, 1.f },
 	{-1.f,-1.f, 1.f },
@@ -12,14 +12,14 @@ std::vector<la::vec3> LineBatch::staticDirections = {
 };
 
 
-void LineBatch::push_v3(const la::vec3& _V)
+void LineBatch::push_v3(const glm::vec3& _V)
 {
 	mBuffer.push_back(_V[0]);
 	mBuffer.push_back(_V[1]);
 	mBuffer.push_back(_V[2]);
 }
 
-void LineBatch::push_v4(const la::vec4& _V)
+void LineBatch::push_v4(const glm::vec4& _V)
 {
 	mBuffer.push_back(_V[0]);
 	mBuffer.push_back(_V[1]);
@@ -35,7 +35,7 @@ LineBatch::LineBatch(size_t _Capacity)
 	mBuffer.reserve(_Capacity);
 }
 
-void LineBatch::line(const la::vec3& _Pos1, const la::vec3& _Pos2, const la::vec4& _Color)
+void LineBatch::line(const glm::vec3& _Pos1, const glm::vec3& _Pos2, const glm::vec4& _Color)
 {
 	uint32_t index = static_cast<uint32_t>(mBuffer.size() / gVertexSize);
 
@@ -49,17 +49,17 @@ void LineBatch::line(const la::vec3& _Pos1, const la::vec3& _Pos2, const la::vec
 	mIndices.push_back(index + 1);
 }
 
-void LineBatch::box(const la::vec3& _Pos, const la::vec3& _Size, const la::vec4& _Color)
+void LineBatch::box(const glm::vec3& _Pos, const glm::vec3& _Size, const glm::vec4& _Color)
 {
 	uint32_t index = static_cast<uint32_t>(mBuffer.size() / gVertexSize);
 
-	la::vec3 size = _Size * 0.5f;
+	glm::vec3 size = _Size * 0.5f;
 
 	for (auto i = 0; i < 8; ++i)
 	{
-		mBuffer.push_back(_Pos[0] + staticDirections[i][0] * size[0]);
-		mBuffer.push_back(_Pos[1] + staticDirections[i][1] * size[1]);
-		mBuffer.push_back(_Pos[2] + staticDirections[i][2] * size[2]);
+		mBuffer.push_back(_Pos.x + staticDirections[i].x * size.x);
+		mBuffer.push_back(_Pos.y + staticDirections[i].y * size.y);
+		mBuffer.push_back(_Pos.z + staticDirections[i].z * size.z);
 
 		push_v4(_Color);
 	}

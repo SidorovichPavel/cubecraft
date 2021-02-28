@@ -28,9 +28,9 @@ voxel::Chunks* App::appChunks;
 bool rb_press = false;
 
 //timed
-la::mat4 model;
-la::mat4 perspective;
-la::mat4 view;
+glm::mat4 model;
+glm::mat4 perspective;
+glm::mat4 view;
 
 struct Cube
 {
@@ -47,7 +47,7 @@ constexpr auto gWorldDepth = gWorldCube.z1 - gWorldCube.z0;
 
 std::vector<unsigned> indices{ 0,1,2,1,0,3,6,5,4,7,4,5,2,6,0,0,6,4,1,3,5,5,3,7,0,4,3,3,4,7,5,6,1,1,6,2 };
 
-std::vector<la::vec3> vertexes{
+std::vector<glm::vec3> vertexes{
 	{  .5f,  .5f, .5f },
 	{ -.5f, -.5f, .5f },
 	{  .5f, -.5f, .5f },
@@ -105,6 +105,14 @@ void App::BindEvents()
 											});
 	appWindow->mouse_rbutton_up.attach([] (int64_t, int32_t x, int32_t)
 									   {
+										   glm::vec3 end, norm, iend;
+										   auto vox = appChunks->ray_cast(appCamera->get_position(), glm::normalize(appCamera->get_direction()),
+																	  8.f,
+																	  end, norm, iend);
+										   if (rb_press && vox)
+										   {
+											   appChunks->set((int)iend[0] + (int)norm[0], (int)iend[1] + (int)norm[1], (int)iend[2] + (int)norm[2], 1);
+										   }
 										   rb_press = false;
 									   });
 	appWindow->mouse_rbutton_down.attach([] (int64_t, int32_t x, int32_t)
@@ -136,7 +144,8 @@ void App::Init(int argn, char** argc)
 	appWindow = new tgl::View(640, 480, gTitle);
 	appWindow->init_opengl();
 	appWindow->enale_opengl_context();
-	appCamera = new Camera(la::vec3({ 0.f, 50.f, 1.f }), la::vec3({ 0.f, 0.f, 0.f }), la::vec3({ 0.f, 0.f, -1.f }), 640.f / 480.f, 45.f);
+	appCamera = new Camera(glm::vec3({ 0.f, 50.f, 1.f }), glm::vec3({ 0.f, 0.f, 0.f }), glm::vec3({ 0.f, 0.f, -1.f }),
+						   640.f / 480.f, 45.f);
 	//appCamera->use_quaternoins();
 
 	::App::BindEvents();
@@ -175,9 +184,6 @@ void App::Init(int argn, char** argc)
 	LinesShader->link();
 
 	appLineBatch = new LineBatch(50);
-	appLineBatch->line(la::vec3{ 0.f,0.f,0.f }, la::vec3{ 0.f,20.f,0.f }, la::vec4{ 1.f,0.f,0.f,1.f });
-	appLineBatch->box(la::vec3{ 0.f,20.f,0.f }, la::vec3{ 1.2f,1.2f,1.2f }, la::vec4{ 1.f,0.f,0.f,1.f });
-	appLineBatch->render();
 
 	appChunks = new voxel::Chunks(gWorldWidth, gWorldHeight, gWorldDepth);
 
@@ -196,25 +202,25 @@ void App::Init(int argn, char** argc)
 	PrevTime = tgl::win::GetTickCount64();
 	FrameTime = 0.f;
 
-	model = la::mat4(1.f);
-	view = la::mat4(1.f);
-	perspective = la::mat4(1.f);
+	model = glm::mat4(1.f);
+	view = glm::mat4(1.f);
+	perspective = glm::mat4(1.f);
 }
 
 void App::KeyProcessing()
 {
 	if (appKeys['W'] || appKeys[VK_UP])
-		*appCamera += la::normalize(appCamera->get_direction()) * FrameTime * appCameraSpeed;
+		*appCamera += glm::normalize(appCamera->get_direction()) * FrameTime * appCameraSpeed;
 	if (appKeys['S'] || appKeys[VK_DOWN])
-		*appCamera -= la::normalize(appCamera->get_direction()) * FrameTime * appCameraSpeed;
+		*appCamera -= glm::normalize(appCamera->get_direction()) * FrameTime * appCameraSpeed;
 	if (appKeys['D'] || appKeys[VK_RIGHT])
-		*appCamera += la::normalize(appCamera->get_right()) * FrameTime * appCameraSpeed;
+		*appCamera += glm::normalize(appCamera->get_right()) * FrameTime * appCameraSpeed;
 	if (appKeys['A'] || appKeys[VK_LEFT])
-		*appCamera -= la::normalize(appCamera->get_right()) * FrameTime * appCameraSpeed;
+		*appCamera -= glm::normalize(appCamera->get_right()) * FrameTime * appCameraSpeed;
 	if (appKeys[VK_SPACE])
-		*appCamera += la::normalize(appCamera->get_up()) * FrameTime * appCameraSpeed;
+		*appCamera += glm::normalize(appCamera->get_up()) * FrameTime * appCameraSpeed;
 	if (appKeys[VK_SHIFT])
-		*appCamera -= la::normalize(appCamera->get_up()) * FrameTime * appCameraSpeed;
+		*appCamera -= glm::normalize(appCamera->get_up()) * FrameTime * appCameraSpeed;
 
 	if (appKeys['Q'] && appLockCursor && false)
 		appCamera->update_angles(0.f, 0.f, 1.5f * FrameTime);
@@ -239,62 +245,59 @@ void App::Render()
 
 	::App::KeyProcessing();
 
-	{
-		la::vec3 end, norm, iend;
-		if (rb_press)
-		{
-			auto vox = appChunks->ray_cast(appCamera->get_position(), la::normalize(appCamera->get_direction()),
-								   8.f,
-								   end, norm, iend);
-			if (vox)
-				appChunks->set((int)iend[0] + (int)norm[0], (int)iend[1] + (int)norm[1], (int)iend[2] + (int)norm[2], 1);
-		}
 
-	}
-
+	glm::vec3 end, norm, iend;
+	auto vox = appChunks->ray_cast(appCamera->get_position(), glm::normalize(appCamera->get_direction()),
+							   8.f,
+							   end, norm, iend);
+	if (vox)
+		appLineBatch->box(iend, glm::vec3(1.01f), glm::vec4{ 1.f,1.f,0.f,1.f });
 
 	//render section
+	appLineBatch->render();
+
 	for (auto& chunk : *appChunks)
 		voxel::Chunk::render(chunk);
 	//render
 
 	//shader-draw section
 	{
-		model = la::mat4(1.f);
+		model = glm::mat4(1.f);
 		view = appCamera->get_view();
 		perspective = appCamera->get_perspective();
 		auto transform = perspective * view * model;
 
 
 		static float angle = 0.f;
-		la::vec3 light_pos = la::vec3{
+		glm::vec3 light_pos = glm::vec3{
 			20 * cosf(angle),
 			20 * sinf(angle),
 			0.f
 		};
 		angle += 0.015f;
-		la::vec3 light_pos2{ 0,25,0 };
+		glm::vec3 light_pos2{ 0,25,0 };
+		glm::vec3 light_color(1.f);
 
 		tgl::gl::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		tgl::gl::glClearColor(0.f, 0.f, 0.f, 1.f);
 
 		MineShader->use();
-		MineShader->uniform_matrix4f("transform", transform.data());
-		MineShader->uniform_vector3f("light_pos", light_pos2.data());//light_pos.data());//appCamera->get_position().data());
-		MineShader->uniform_vector3f("light_color", la::vec3(1.f).data());
+		MineShader->uniform_matrix4f("transform", &transform);
+		MineShader->uniform_vector3f("light_pos", &light_pos2);//light_pos.data());//appCamera->get_position().data());
+		MineShader->uniform_vector3f("light_color", &light_color);
 
 		for (auto& e : *appChunks)
 			e.draw();
-
-		model = la::translate(model, light_pos2);
-
-		transform = perspective * view * model;
+		
+		model = glm::translate(model, light_pos2);
+		
+		auto camera_mat = appCamera->get_mat4();
 		ShaderFirst->use();
-		ShaderFirst->uniform_matrix4f("transform", transform.data());
+		ShaderFirst->uniform_matrix4f("transform", &transform);
 		WhiteCube->draw(GL_TRIANGLES);
 
 		LinesShader->use();
-		LinesShader->uniform_matrix4f("camera_mat4", (perspective * view).data());
+		LinesShader->uniform_matrix4f("camera_mat4", &camera_mat);
 		appLineBatch->draw();
 	}
 	//draw end
@@ -322,7 +325,7 @@ int App::Run()
 
 		if (ms < msNext)
 		{
-			wait = min(fpsLock, msNext - ms);
+			wait = std::min(fpsLock, msNext - ms);
 			::App::Render();
 		}
 

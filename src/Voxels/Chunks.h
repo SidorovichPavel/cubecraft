@@ -1,7 +1,7 @@
 #pragma once
 
 #include <src/Voxels/Chunk.h>
-#include <src/MathObjects/Vector.h>
+#include <src/glm/glm.hpp>
 #include <vector>
 
 namespace voxel
@@ -46,9 +46,9 @@ namespace voxel
 		Voxel* get(int32_t _X, int32_t _Y, int32_t _Z) noexcept;
 		void set(int32_t _X, int32_t _Y, int32_t _Z, uint8_t _ID) noexcept;
 
-		Voxel* ray_cast(const la::vec3& src, const la::vec3& dir,
-						float maxDist,
-						la::vec3& end, la::vec3& norm, la::vec3& iend);
+		Voxel* ray_cast(const glm::vec3& src, const glm::vec3& dir,
+						const float maxDist,
+						glm::vec3& end, glm::vec3& norm, glm::vec3& iend);
 
 		hide::yz_place operator[](uint32_t x) noexcept;
 		const hide::yz_place operator[](uint32_t x) const noexcept;

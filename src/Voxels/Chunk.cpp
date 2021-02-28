@@ -42,7 +42,6 @@ namespace voxel
 			for (auto x = 0; x < Chunk::WIDTH; ++x)
 			{
 				float height =
-					//(std::cosf((mGlobalX + x)*0.6f) * 0.5f + 0.5f) * 10.f;
 					static_cast<float>(perlin.normalizedOctaveNoise3D_0_1((mGlobalX + x) * 2.735f, (mGlobalY + z) * 0.235f, (mGlobalZ) * 0.05f, 7));
 				height *= 10.f;
 				height += 5;
@@ -58,7 +57,7 @@ namespace voxel
 	Chunk::~Chunk()
 	{}
 
-	const std::vector<la::vec3i> Chunk::staticDirections = {
+	const std::vector<glm::ivec3> Chunk::staticDirections = {
 			{ 1,  0,  0 },
 			{-1,  0,  0 },
 			{ 0,  1,  0 },
@@ -134,7 +133,7 @@ namespace voxel
 
 		auto add_to_mesh = [&] (int x, int y, int z, int i)
 		{
-			la::vec3 normal;
+			glm::vec3 normal;
 			normal[0] = static_cast<float>(staticDirections[i][0]);
 			normal[1] = static_cast<float>(staticDirections[i][1]);
 			normal[2] = static_cast<float>(staticDirections[i][2]);
@@ -166,9 +165,9 @@ namespace voxel
 					for (auto i = 0; i < 6; ++i)
 					{
 						auto
-							xx = x + staticDirections[i][0],
-							yy = y + staticDirections[i][1],
-							zz = z + staticDirections[i][2];
+							xx = x + staticDirections[i].x,
+							yy = y + staticDirections[i].y,
+							zz = z + staticDirections[i].z;
 
 						if (!(xx < 0 || xx >= (1 << Chunk::WIDTH_SHIFT) ||
 							  yy < 0 || yy >= (1 << Chunk::HEIGHT_SHIFT) ||

@@ -1,7 +1,8 @@
 #pragma once
 
 #include <src/tinyGL.h>
-#include <src/linearAlgebra.h>
+#include <src/glm/glm.hpp>
+#include <src/glm/ext.hpp>
 #include <src/SOIL.h>
 #include <src/SimpleApp/SimpleApp.h>
 #include <src/Camera/Camera.h>

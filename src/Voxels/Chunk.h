@@ -2,7 +2,7 @@
 
 #include <src/Voxels/Voxel.h>
 #include <src/Mesh/Mesh.h>
-#include <src/linearAlgebra.h>
+#include <src/glm/glm.hpp>
 #include <vector>
 #include <array>
 
@@ -26,7 +26,7 @@ namespace voxel
 
 		static std::vector<float> staticBuffer;
 		static std::vector<uint32_t> staticIndices;
-		static const std::vector<la::vec3i> staticDirections;
+		static const std::vector<glm::ivec3> staticDirections;
 		static const std::vector<std::vector<std::array<float, gVertexSize>>> staticOffsets;
 	public:
 		static const int WIDTH_SHIFT;
