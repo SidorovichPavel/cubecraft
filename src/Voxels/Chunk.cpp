@@ -7,39 +7,56 @@
 
 namespace voxel
 {
+	const int Chunk::WIDTH_SHIFT = 4;
+	const int Chunk::HEIGHT_SHIFT = 7;
+	const int Chunk::DEPTH_SHIFT = 4;
+	const int Chunk::WIDTH = 1 << Chunk::WIDTH_SHIFT;
+	const int Chunk::HEIGHT = 1 << Chunk::HEIGHT_SHIFT;
+	const int Chunk::DEPTH = 1 << Chunk::DEPTH_SHIFT;
+
+	const int Chunk::VOLUME = WIDTH * HEIGHT * DEPTH;
+
+	//debug
+	constexpr int V = Chunk::WIDTH * Chunk::HEIGHT * Chunk::DEPTH;
+	//
 
 	Chunk::Chunk(int32_t _GX, int32_t _GY, int32_t _GZ)
 		:
-		mGlobalX(_GX* CHUNK_WIDTH),
-		mGlobalY(_GY* CHUNK_HEIGHT),
-		mGlobalZ(_GZ* CHUNK_DEPTH),
-		mMesh(nullptr)
+		x(_GX),
+		y(_GY),
+		z(_GZ),
+		mMesh(new tgl::Mesh()),
+		mVoxels(Chunk::WIDTH, Chunk::HEIGHT, Chunk::DEPTH),
+		mNeedUpdate(true)
 	{
 		std::fill(mNeighbors.begin(), mNeighbors.end(), nullptr);
 		mVoxels.resize(VOLUME);
 
 		siv::PerlinNoise perlin(std::random_device{});
 
-		for (auto z = 0; z < CHUNK_DEPTH; ++z)
-			for (auto x = 0; x < CHUNK_WIDTH; ++x)
+		mGlobalX = x << Chunk::WIDTH_SHIFT;
+		mGlobalY = y << Chunk::HEIGHT_SHIFT;
+		mGlobalZ = z << Chunk::DEPTH_SHIFT;
+
+		for (auto z = 0; z < Chunk::DEPTH; ++z)
+			for (auto x = 0; x < Chunk::WIDTH; ++x)
 			{
 				float height =
 					//(std::cosf((mGlobalX + x)*0.6f) * 0.5f + 0.5f) * 10.f;
-					static_cast<float>(perlin.normalizedOctaveNoise3D_0_1((mGlobalX + x) * 2.735f, (mGlobalZ + z) * 0.235f, (mGlobalY) * 0.05f, 7));
+					static_cast<float>(perlin.normalizedOctaveNoise3D_0_1((mGlobalX + x) * 2.735f, (mGlobalY + z) * 0.235f, (mGlobalZ) * 0.05f, 7));
 				height *= 10.f;
 				height += 5;
-				for (auto y = 0; y < CHUNK_HEIGHT; ++y)
+				for (auto y = 0; y < Chunk::HEIGHT; ++y)
 				{
 					uint8_t id = (mGlobalY + y) <= static_cast<int32_t>(height);
 
-					mVoxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].mType = id;
+					mVoxels[x][y][z].mType = id;
 				}
 			}
 	}
 
 	Chunk::~Chunk()
-	{
-	}
+	{}
 
 	const std::vector<la::vec3i> Chunk::staticDirections = {
 			{ 1,  0,  0 },
@@ -110,6 +127,8 @@ namespace voxel
 		staticIndices.clear();
 
 		decltype(auto) chunk = _Chunk;
+		if (!chunk.mNeedUpdate)
+			return;
 
 		std::array<float, 4 * gVertexSize> vertex_data;
 
@@ -119,7 +138,7 @@ namespace voxel
 			normal[0] = static_cast<float>(staticDirections[i][0]);
 			normal[1] = static_cast<float>(staticDirections[i][1]);
 			normal[2] = static_cast<float>(staticDirections[i][2]);
-			
+
 			for (auto counter = 0; counter < 4; ++counter)
 			{
 				vertex_data[counter * gVertexSize + 0] = chunk.mGlobalX + x + staticOffsets[i][counter][0];
@@ -134,11 +153,13 @@ namespace voxel
 			push_data(vertex_data);
 		};
 
-		for (auto y = 0; y < CHUNK_HEIGHT; ++y)
-			for (auto z = 0; z < CHUNK_DEPTH; ++z)
-				for (auto x = 0; x < CHUNK_WIDTH; ++x)
+		for (auto y = 0; y < Chunk::HEIGHT; ++y)
+		{
+			//int32_t global_lightning_access = true;
+			for (auto z = 0; z < Chunk::DEPTH; ++z)
+				for (auto x = 0; x < Chunk::WIDTH; ++x)
 				{
-					auto voxel = chunk[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x];
+					auto voxel = chunk[x][y][z];
 					if (!voxel.mType)
 						continue;
 
@@ -149,9 +170,11 @@ namespace voxel
 							yy = y + staticDirections[i][1],
 							zz = z + staticDirections[i][2];
 
-						if (!(xx < 0 || xx >= CHUNK_WIDTH || yy < 0 || yy >= CHUNK_HEIGHT || zz < 0 || zz >= CHUNK_DEPTH))
+						if (!(xx < 0 || xx >= (1 << Chunk::WIDTH_SHIFT) ||
+							  yy < 0 || yy >= (1 << Chunk::HEIGHT_SHIFT) ||
+							  zz < 0 || zz >= (1 << Chunk::DEPTH_SHIFT)))
 						{
-							if (!chunk[(yy * CHUNK_DEPTH + zz) * CHUNK_WIDTH + xx].mType)
+							if (!chunk[xx][yy][zz].mType)
 							{
 								add_to_mesh(x, y, z, i);
 							}
@@ -175,7 +198,7 @@ namespace voxel
 								auto _y = select_coord(y, staticDirections[i][1]);
 								auto _z = select_coord(z, staticDirections[i][2]);
 
-								if (!(*chunk.mNeighbors[i])[(_y * CHUNK_DEPTH + _z) * CHUNK_WIDTH + _x].mType)
+								if (!(*chunk.mNeighbors[i])[_x][_y][_z].mType)
 								{
 									add_to_mesh(x, y, z, i);
 								}
@@ -183,13 +206,12 @@ namespace voxel
 						}
 					}
 				}
+		}
 
-		auto result = new tgl::Mesh();
-		result->bind();
-		result->add_attribut<attrib_pack>(staticBuffer.size(), staticBuffer.data());
-		result->set_indices(staticIndices.size(), staticIndices.data());
-		delete chunk.mMesh;
-		chunk.mMesh = result;
+		chunk.mNeedUpdate = false;
+		chunk.mMesh->set_attribut<attrib_pack>(staticBuffer.size(), staticBuffer.data());
+		chunk.mMesh->set_indices(staticIndices.size(), staticIndices.data());
+		chunk.mMesh->unbind();
 	}
 
 	void Chunk::set_neighbors(const Chunk* _R, const Chunk* _L, const Chunk* _U, const Chunk* _D, const Chunk* _F, const Chunk* _B)
@@ -207,13 +229,15 @@ namespace voxel
 		mMesh->draw(_ObjType);
 	}
 
-	voxel& Chunk::operator[](size_t _Index) noexcept
+	hide::vox_ref_yz_place Chunk::operator[](uint32_t _X) noexcept
 	{
-		return mVoxels[_Index];
+		assert(_X < Chunk::WIDTH);
+		return mVoxels[_X];
 	}
 
-	voxel Chunk::operator[](size_t _Index) const noexcept
+	const hide::vox_ref_yz_place Chunk::operator[](uint32_t _X) const noexcept
 	{
-		return mVoxels[_Index];
+		assert(_X < Chunk::WIDTH);
+		return mVoxels[_X];
 	}
 }

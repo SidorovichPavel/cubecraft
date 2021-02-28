@@ -8,11 +8,6 @@
 
 namespace voxel
 {
-	constexpr auto CHUNK_WIDTH = 16;
-	constexpr auto CHUNK_HEIGHT = 128;
-	constexpr auto CHUNK_DEPTH = 16;
-	constexpr auto VOLUME = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH;
-
 	enum class DrawMode
 	{
 		NoDraw,
@@ -25,17 +20,29 @@ namespace voxel
 
 	class Chunk
 	{
-		using vox_array = std::vector<voxel>;
-		vox_array mVoxels;
-		std::array<Chunk*, 6> mNeighbors;
+		Voxels mVoxels;
+
+		tgl::Mesh* mMesh;
 
 		static std::vector<float> staticBuffer;
 		static std::vector<uint32_t> staticIndices;
 		static const std::vector<la::vec3i> staticDirections;
 		static const std::vector<std::vector<std::array<float, gVertexSize>>> staticOffsets;
 	public:
+		static const int WIDTH_SHIFT;
+		static const int HEIGHT_SHIFT;
+		static const int DEPTH_SHIFT;
+		
+		static const int WIDTH;
+		static const int HEIGHT;
+		static const int DEPTH;
+
+		static const int VOLUME;
+
 		int32_t mGlobalX, mGlobalY, mGlobalZ;
-		tgl::Mesh* mMesh;
+		int32_t x, y, z;
+		std::array<Chunk*, 6> mNeighbors;
+		bool mNeedUpdate;
 
 		Chunk(int32_t _GX = 0, int32_t _GY = 0, int32_t _GZ = 0);
 		~Chunk();
@@ -48,8 +55,7 @@ namespace voxel
 						   const Chunk* _F, const Chunk* _B);
 		void draw(uint32_t _ObjType = GL_TRIANGLES);
 
-		voxel& operator[](size_t _Index) noexcept;
-		voxel operator[](size_t _Index) const noexcept;
+		hide::vox_ref_yz_place operator[](uint32_t _X) noexcept;
+		const hide::vox_ref_yz_place operator[](uint32_t _X) const noexcept;
 	};
-
 }

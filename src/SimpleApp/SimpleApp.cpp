@@ -6,10 +6,12 @@ std::wstring gTitle{ L"Minecraft++" };
 tgl::View* App::appWindow;
 tgl::Shader* App::ShaderFirst;
 tgl::Shader* App::MineShader;
+tgl::Shader* App::LinesShader;
 tgl::Mesh* App::WhiteCube;
 tgl::Texture2D* App::appTexture;
 tgl::Texture2D* App::appTexture2;
 tgl::Texture2D* appTexture3;
+LineBatch* App::appLineBatch;
 Camera* App::appCamera;
 
 tgl::TextureAtlas2D* appAtlas;
@@ -23,6 +25,7 @@ size_t App::PrevTime;
 float App::FrameTime;
 
 voxel::Chunks* App::appChunks;
+bool rb_press = false;
 
 //timed
 la::mat4 model;
@@ -37,12 +40,12 @@ struct Cube
 		z0, z1;
 };
 
-constexpr Cube gWorldCube{ -2,3,0,1,-2,3 };
+constexpr Cube gWorldCube{ -1,1,0,1,-1,1 };
 constexpr auto gWorldWidth = gWorldCube.x1 - gWorldCube.x0;
 constexpr auto gWorldHeight = gWorldCube.y1 - gWorldCube.y0;
 constexpr auto gWorldDepth = gWorldCube.z1 - gWorldCube.z0;
 
-std::vector<unsigned> indices{ 0,1,2,1,0,3,6,5,4,7,4,5,2,6,0,0,6,4,1,3,5,5,3,7,0,4,3,3,4,7,5,6,1,1,6,2};
+std::vector<unsigned> indices{ 0,1,2,1,0,3,6,5,4,7,4,5,2,6,0,0,6,4,1,3,5,5,3,7,0,4,3,3,4,7,5,6,1,1,6,2 };
 
 std::vector<la::vec3> vertexes{
 	{  .5f,  .5f, .5f },
@@ -70,16 +73,16 @@ void App::BindEvents()
 									 tgl::gl::glViewport(0, 0, x, y);
 								 });
 	appWindow->mouse_wheel_event.attach(appCamera, &Camera::update_Fovy);
-	
+
 	appWindow->key_down_event.attach([] (int64_t code, int64_t)
 									 {
 										 if (code >= 0 && code < 1024)
 											 appKeys[code] = true;
 									 });
-	
+
 	appWindow->key_down_event.attach([] (int64_t code, int64_t)
 									 {
-										 if (appKeys[VK_TAB])
+										 if (code == VK_TAB)
 											 appLockCursor = !appLockCursor;
 										 appWindow->show_cursor(!appLockCursor);
 										 if (appLockCursor)
@@ -87,97 +90,61 @@ void App::BindEvents()
 										 else
 											 appWindow->disable_mouse_raw_input();
 									 });
-	
+
 	appWindow->key_up_event.attach([] (int64_t code, int64_t)
 								   {
 									   if (code >= 0 && code < 1024)
 										   appKeys[code] = false;
 								   });
-	
+
 	appWindow->mouse_raw_input_event.attach([] (int32_t dx, int32_t dy)
 											{
 												appCamera->update_angles(dy * -appMouseSensitivity * FrameTime,
 																		 dx * -appMouseSensitivity * FrameTime,
 																		 0.f);
 											});
-
+	appWindow->mouse_rbutton_up.attach([] (int64_t, int32_t x, int32_t)
+									   {
+										   rb_press = false;
+									   });
+	appWindow->mouse_rbutton_down.attach([] (int64_t, int32_t x, int32_t)
+										 {
+											 rb_press = true;
+										 });
 }
 
-void callback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, char const* message, void const* user_param)
+void App::DetachEvents()
 {
-	auto source_str = [source] () -> std::string {
-		switch (source)
-		{
-		case GL_DEBUG_SOURCE_API: return "API";
-		case GL_DEBUG_SOURCE_WINDOW_SYSTEM: return "WINDOW SYSTEM";
-		case GL_DEBUG_SOURCE_SHADER_COMPILER: return "SHADER COMPILER";
-		case GL_DEBUG_SOURCE_THIRD_PARTY:  return "THIRD PARTY";
-		case GL_DEBUG_SOURCE_APPLICATION: return "APPLICATION";
-		case GL_DEBUG_SOURCE_OTHER: return "OTHER";
-		default: return "UNKNOWN";
-		}
-	}();
-
-	auto type_str = [type] () {
-		switch (type)
-		{
-		case GL_DEBUG_TYPE_ERROR: return "ERROR";
-		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "DEPRECATED_BEHAVIOR";
-		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: return "UNDEFINED_BEHAVIOR";
-		case GL_DEBUG_TYPE_PORTABILITY: return "PORTABILITY";
-		case GL_DEBUG_TYPE_PERFORMANCE: return "PERFORMANCE";
-		case GL_DEBUG_TYPE_MARKER:  return "MARKER";
-		case GL_DEBUG_TYPE_OTHER: return "OTHER";
-		default: return "UNKNOWN";
-		}
-	}();
-
-	auto severity_str = [severity] () {
-		switch (severity) {
-		case GL_DEBUG_SEVERITY_NOTIFICATION: return "NOTIFICATION";
-		case GL_DEBUG_SEVERITY_LOW: return "LOW";
-		case GL_DEBUG_SEVERITY_MEDIUM: return "MEDIUM";
-		case GL_DEBUG_SEVERITY_HIGH: return "HIGH";
-		default: return "UNKNOWN";
-		}
-	}();
-
-	std::cout << source_str << ", "
-		<< type_str << ", "
-		<< severity_str << ", "
-		<< id << ": "
-		<< message << std::endl;
+	assert(appWindow);
+	appWindow->disable_mouse_raw_input();
+	appWindow->create_event.detach_all();
+	appWindow->key_down_event.detach_all();
+	appWindow->key_up_event.detach_all();
+	appWindow->mouse_move_event.detach_all();
+	appWindow->mouse_raw_input_event.detach_all();
+	appWindow->mouse_wheel_event.detach_all();
+	appWindow->move_event.detach_all();
+	appWindow->moving_event.detach_all();
+	appWindow->raw_input_event.detach_all();
+	appWindow->size_event.detach_all();
 }
-
-uint32_t light_cube_vao, light_cube_vbo, light_cube_veo;
 
 void App::Init(int argn, char** argc)
 {
 	tgl::Init();
 
 	appWindow = new tgl::View(640, 480, gTitle);
-	appCamera = new Camera(la::vec3({ 0.f, 10.f, 1.f }), la::vec3({ 0.f, 10.f, 0.f }), la::vec3({ 0.f, 1.f, 0.f }), 640.f / 480.f, 45.f);
-	appCamera->use_quaternoins();
+	appWindow->init_opengl();
 	appWindow->enale_opengl_context();
+	appCamera = new Camera(la::vec3({ 0.f, 50.f, 1.f }), la::vec3({ 0.f, 0.f, 0.f }), la::vec3({ 0.f, 0.f, -1.f }), 640.f / 480.f, 45.f);
+	//appCamera->use_quaternoins();
 
 	::App::BindEvents();
 
-	//appAtlas = new tgl::TextureAtlas2D();
-	/*
-	std::vector<std::string> diffuse_image = {
-		"res/textures/unnamed.jpg",
-		"res/textures/aerial_grass_rock/aerial_grass_rock_diff_1k.jpg",
-		"res/textures/dirt_aerial_2/dirt_aerial_02_diff_1k.jpg",
-		"res/textures/red_brick_3/red_brick_03_diff_1k.jpg",
-		"res/textures/rocks_ground_2/rocks_ground_02_col_1k.jpg",
-		"res/textures/rocks_ground_6/rocks_ground_06_diff_1k.jpg",
-	};
-	*/
-	//appAtlas->gen<16, 16>(diffuse_image);
-	//appAtlas->bind();
-
+	#ifdef _DEBUG
 	tgl::gl::glEnable(GL_DEBUG_OUTPUT);
-	tgl::gl::DebugMessageCallback(callback, nullptr);
+	tgl::gl::DebugMessageCallback(tgl::callback, nullptr);
+	#endif
 
 	MineShader = new tgl::Shader("mine");
 	MineShader->link();
@@ -197,30 +164,35 @@ void App::Init(int argn, char** argc)
 	appTexture3 = new tgl::Texture2D("textures/red_brick_3/red_brick_03_spec_1k.jpg");
 	appTexture3->bind();
 
-	ShaderFirst = new tgl::Shader("first");
+	ShaderFirst = new tgl::Shader("white");
 	ShaderFirst->link();
 
 	WhiteCube = new tgl::Mesh();
-	WhiteCube->add_attribut<3>(vertexes.size() * 3, (float*)vertexes.data());
+	WhiteCube->set_attribut<3>(vertexes.size() * 3, (float*)vertexes.data());
 	WhiteCube->set_indices(indices.size(), indices.data());
+
+	LinesShader = new tgl::Shader("lines");
+	LinesShader->link();
+
+	appLineBatch = new LineBatch(50);
+	appLineBatch->line(la::vec3{ 0.f,0.f,0.f }, la::vec3{ 0.f,20.f,0.f }, la::vec4{ 1.f,0.f,0.f,1.f });
+	appLineBatch->box(la::vec3{ 0.f,20.f,0.f }, la::vec3{ 1.2f,1.2f,1.2f }, la::vec4{ 1.f,0.f,0.f,1.f });
+	appLineBatch->render();
 
 	appChunks = new voxel::Chunks(gWorldWidth, gWorldHeight, gWorldDepth);
 
 	for (auto y = gWorldCube.y0; y < gWorldCube.y1; ++y)
 		for (auto z = gWorldCube.z0; z < gWorldCube.z1; ++z)
 			for (auto x = gWorldCube.x0; x < gWorldCube.x1; ++x)
-				appChunks->emplace_back(x, 0, z);
-
+				appChunks->emplace_back(x, y, z);
 	appChunks->set_neightbors(gWorldWidth, gWorldHeight, gWorldDepth);
 
-	for (auto& chunk : *appChunks)
-		voxel::Chunk::render(chunk);
 
-	//tgl::gl::glEnable(GL_CULL_FACE);
+
+	tgl::gl::glEnable(GL_CULL_FACE);
 	//tgl::gl::glCullFace(GL_BACK);
 	tgl::gl::glEnable(GL_DEPTH_TEST);
 
-	float angle = 0.f;
 	PrevTime = tgl::win::GetTickCount64();
 	FrameTime = 0.f;
 
@@ -244,9 +216,9 @@ void App::KeyProcessing()
 	if (appKeys[VK_SHIFT])
 		*appCamera -= la::normalize(appCamera->get_up()) * FrameTime * appCameraSpeed;
 
-	if (appKeys['Q'] && appLockCursor && true)
+	if (appKeys['Q'] && appLockCursor && false)
 		appCamera->update_angles(0.f, 0.f, 1.5f * FrameTime);
-	if (appKeys['E'] && appLockCursor && true)
+	if (appKeys['E'] && appLockCursor && false)
 		appCamera->update_angles(0.f, 0.f, -1.5f * FrameTime);
 
 	if (appKeys[VK_ESCAPE])
@@ -267,38 +239,65 @@ void App::Render()
 
 	::App::KeyProcessing();
 
-	tgl::gl::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	tgl::gl::glClearColor(0.f, 0.f, 0.f, 1.f);
-
-	model = la::mat4(1.f);
-	view = appCamera->get_view();
-	perspective = appCamera->get_perspective();
-
-	auto transform = perspective * view * model;
-	auto camera_mat4 = perspective * view;
-
-	la::vec3 light_pos = la::vec3
 	{
-		100 * cosf(la::rad(tgl::win::GetTickCount64() / 100)),
-		100 * sinf(la::rad(tgl::win::GetTickCount64() / 100)),
-		100 * cosf(la::rad(tgl::win::GetTickCount64() / 20000.f)) * sinf(la::rad(tgl::win::GetTickCount64()) / 10000.f)
-	};
-	la::vec3 light_pos2{ 0,55,0 };
-	
-	MineShader->use();
-	MineShader->uniform_matrix4f("transform", transform.data());
-	MineShader->uniform_vector3f("light_pos", light_pos2.data());//light_pos.data());//appCamera->get_position().data());
-	MineShader->uniform_vector3f("light_color", la::vec3(1.f).data());
+		la::vec3 end, norm, iend;
+		if (rb_press)
+		{
+			auto vox = appChunks->ray_cast(appCamera->get_position(), la::normalize(appCamera->get_direction()),
+								   8.f,
+								   end, norm, iend);
+			if (vox)
+				appChunks->set((int)iend[0] + (int)norm[0], (int)iend[1] + (int)norm[1], (int)iend[2] + (int)norm[2], 1);
+		}
 
-	for (auto& e : *appChunks)
-		e.draw();
+	}
 
-	model = la::translate(model, light_pos2);
 
-	transform = perspective * view * model;
-	ShaderFirst->use();
-	ShaderFirst->uniform_matrix4f("transform", transform.data());
-	WhiteCube->draw(GL_TRIANGLES);
+	//render section
+	for (auto& chunk : *appChunks)
+		voxel::Chunk::render(chunk);
+	//render
+
+	//shader-draw section
+	{
+		model = la::mat4(1.f);
+		view = appCamera->get_view();
+		perspective = appCamera->get_perspective();
+		auto transform = perspective * view * model;
+
+
+		static float angle = 0.f;
+		la::vec3 light_pos = la::vec3{
+			20 * cosf(angle),
+			20 * sinf(angle),
+			0.f
+		};
+		angle += 0.015f;
+		la::vec3 light_pos2{ 0,25,0 };
+
+		tgl::gl::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		tgl::gl::glClearColor(0.f, 0.f, 0.f, 1.f);
+
+		MineShader->use();
+		MineShader->uniform_matrix4f("transform", transform.data());
+		MineShader->uniform_vector3f("light_pos", light_pos2.data());//light_pos.data());//appCamera->get_position().data());
+		MineShader->uniform_vector3f("light_color", la::vec3(1.f).data());
+
+		for (auto& e : *appChunks)
+			e.draw();
+
+		model = la::translate(model, light_pos2);
+
+		transform = perspective * view * model;
+		ShaderFirst->use();
+		ShaderFirst->uniform_matrix4f("transform", transform.data());
+		WhiteCube->draw(GL_TRIANGLES);
+
+		LinesShader->use();
+		LinesShader->uniform_matrix4f("camera_mat4", (perspective * view).data());
+		appLineBatch->draw();
+	}
+	//draw end
 
 	appWindow->swap_buffers();
 }
@@ -352,6 +351,7 @@ void App::Terminate()
 	delete appTexture;
 	delete appTexture2;
 	delete appTexture3;
+	delete appLineBatch;
 	delete appAtlas;
 	delete appCamera;
 	delete appWindow;

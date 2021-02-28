@@ -17,11 +17,13 @@ namespace voxel
 
 		z_place yz_place::operator[](uint32_t y) noexcept
 		{
+			assert(y < height);
 			return z_place(Data, x, y, width, height, depth);
 		}
 
 		const z_place yz_place::operator[](uint32_t y) const noexcept
 		{
+			assert(y < height);
 			return z_place(Data, x, y, width, height, depth);
 		}
 		//end
@@ -76,16 +78,181 @@ namespace voxel
 					right = left = front = back = nullptr;
 
 					if (x < _Width - 1)
-						right = &(*this)[x + 1][0][z];
+						right = &(*this)[x + 1][y][z];
 					if (x > 0)
-						left = &(*this)[x - 1][0][z];
+						left = &(*this)[x - 1][y][z];
 					if (z < _Depth - 1)
-						front = &(*this)[x][0][z + 1];
+						front = &(*this)[x][y][z + 1];
 					if (z > 0)
-						back = &(*this)[x][0][z - 1];
+						back = &(*this)[x][y][z - 1];
 
-					(*this)[x][0][z].set_neighbors(right, left, nullptr, nullptr, front, back);
+					(*this)[x][y][z].set_neighbors(right, left, nullptr, nullptr, front, back);
 				}
+	}
+
+	Voxel* Chunks::get(int32_t _X, int32_t _Y, int32_t _Z) noexcept
+	{
+		auto zero_chunk = base::front();
+
+		auto x = _X >> Chunk::WIDTH_SHIFT;
+		auto y = _Y >> Chunk::HEIGHT_SHIFT;
+		auto z = _Z >> Chunk::DEPTH_SHIFT;
+
+		auto cx = x - zero_chunk.x;
+		auto cy = y - zero_chunk.y;
+		auto cz = z - zero_chunk.z;
+
+		if (cx < 0 || cx >= static_cast<int32_t>(mWidth) ||
+			cy < 0 || cy >= static_cast<int32_t>(mHeight) ||
+			cz < 0 || cz >= static_cast<int32_t>(mDepth))
+			return nullptr;
+
+		auto lx = _X - (x << Chunk::WIDTH_SHIFT);
+		auto ly = _Y - (y << Chunk::HEIGHT_SHIFT);
+		auto lz = _Z - (z << Chunk::DEPTH_SHIFT);
+
+		if (lx < 0 || lx >= Chunk::WIDTH || ly < 0 || ly >= Chunk::WIDTH || lz < 0 || lz >= Chunk::DEPTH)
+			return nullptr;
+
+		decltype(auto) chunk = (*this)[cx][cy][cz];
+
+		return &chunk[lx][ly][lz];
+	}
+
+	void Chunks::set(int32_t _X, int32_t _Y, int32_t _Z, uint8_t _ID) noexcept
+	{
+		auto zero_chunk = base::front();
+
+		auto x = _X >> Chunk::WIDTH_SHIFT;
+		auto y = _Y >> Chunk::HEIGHT_SHIFT;
+		auto z = _Z >> Chunk::DEPTH_SHIFT;
+
+		auto cx = x - zero_chunk.x;
+		auto cy = y - zero_chunk.y;
+		auto cz = z - zero_chunk.z;
+
+		if (cx < 0 || cx >= static_cast<int32_t>(mWidth) ||
+			cy < 0 || y >= static_cast<int32_t>(mHeight) ||
+			cz < 0 || cz >= static_cast<int32_t>(mDepth))
+			return;
+
+		auto lx = _X - (x << Chunk::WIDTH_SHIFT);
+		auto ly = _Y - (y << Chunk::HEIGHT_SHIFT);
+		auto lz = _Z - (z << Chunk::DEPTH_SHIFT);
+
+		if (lx < 0 || lx >= Chunk::WIDTH || ly < 0 || ly >= Chunk::WIDTH || lz < 0 || lz >= Chunk::DEPTH)
+			return;
+
+		decltype(auto) chunk = (*this)[cx][cy][cz];
+		chunk[lx][ly][lz].mType = _ID;
+
+		chunk.mNeedUpdate = true;
+		if (lx == Chunk::WIDTH - 1 &&
+			chunk.mNeighbors[0])		chunk.mNeighbors[0]->mNeedUpdate = true;
+		if (lx == 0 &&
+			chunk.mNeighbors[1])		chunk.mNeighbors[1]->mNeedUpdate = true;
+		if (ly == Chunk::HEIGHT - 1 &&
+			chunk.mNeighbors[2])		chunk.mNeighbors[2]->mNeedUpdate = true;
+		if (ly == 0 &&
+			chunk.mNeighbors[3])		chunk.mNeighbors[3]->mNeedUpdate = true;
+		if (lz == Chunk::DEPTH - 1 &&
+			chunk.mNeighbors[4])		chunk.mNeighbors[4]->mNeedUpdate = true;
+		if (lz == 0 &&
+			chunk.mNeighbors[5])		chunk.mNeighbors[5]->mNeedUpdate = true;
+	}
+
+	Voxel* Chunks::ray_cast(const la::vec3& src, const la::vec3& dir,
+							float maxDist,
+							la::vec3& end, la::vec3& norm, la::vec3& iend)
+	{
+		float px = src[0];
+		float py = src[1];
+		float pz = src[2];
+
+		float dx = dir[0];
+		float dy = dir[1];
+		float dz = dir[2];
+
+		float t = 0.0f;
+		int ix = static_cast<int>(floor(px));
+		int iy = static_cast<int>(floor(py));
+		int iz = static_cast<int>(floor(pz));
+
+		float stepx = (dx > 0.0f) ? 1.0f : -1.0f;
+		float stepy = (dy > 0.0f) ? 1.0f : -1.0f;
+		float stepz = (dz > 0.0f) ? 1.0f : -1.0f;
+
+		constexpr float infinity = std::numeric_limits<float>::infinity();
+
+		float txDelta = (dx == 0.0f) ? infinity : abs(1.0f / dx);
+		float tyDelta = (dy == 0.0f) ? infinity : abs(1.0f / dy);
+		float tzDelta = (dz == 0.0f) ? infinity : abs(1.0f / dz);
+
+		float xdist = (stepx > 0) ? (ix + 1 - px) : (px - ix);
+		float ydist = (stepy > 0) ? (iy + 1 - py) : (py - iy);
+		float zdist = (stepz > 0) ? (iz + 1 - pz) : (pz - iz);
+
+		float txMax = (txDelta < infinity) ? txDelta * xdist : infinity;
+		float tyMax = (tyDelta < infinity) ? tyDelta * ydist : infinity;
+		float tzMax = (tzDelta < infinity) ? tzDelta * zdist : infinity;
+
+		int steppedIndex = -1;
+
+		while (t <= maxDist) {
+			auto voxel = get(ix, iy, iz);
+			if (voxel == nullptr || voxel->mType) {
+				end[0] = px + t * dx;
+				end[1] = py + t * dy;
+				end[2] = pz + t * dz;
+
+				iend[0] = static_cast<float>(ix);
+				iend[1] = static_cast<float>(iy);
+				iend[2] = static_cast<float>(iz);
+
+				norm[0] = norm[1] = norm[2] = 0.0f;
+				if (steppedIndex == 0) norm[0] = -stepx;
+				if (steppedIndex == 1) norm[1] = -stepy;
+				if (steppedIndex == 2) norm[2] = -stepz;
+				return voxel;
+			}
+			if (txMax < tyMax) {
+				if (txMax < tzMax) {
+					ix += static_cast<int>(stepx);
+					t = txMax;
+					txMax += txDelta;
+					steppedIndex = 0;
+				}
+				else {
+					iz += static_cast<int>(stepz);
+					t = tzMax;
+					tzMax += tzDelta;
+					steppedIndex = 2;
+				}
+			}
+			else {
+				if (tyMax < tzMax) {
+					iy += static_cast<int>(stepy);
+					t = tyMax;
+					tyMax += tyDelta;
+					steppedIndex = 1;
+				}
+				else {
+					iz += static_cast<int>(stepz);
+					t = tzMax;
+					tzMax += tzDelta;
+					steppedIndex = 2;
+				}
+			}
+		}
+		iend[0] = static_cast<float>(ix);
+		iend[1] = static_cast<float>(iy);
+		iend[2] = static_cast<float>(iz);
+
+		end[0] = px + t * dx;
+		end[1] = py + t * dy;
+		end[2] = pz + t * dz;
+		norm[0] = norm[1] = norm[2] = 0.0f;
+		return nullptr;
 	}
 
 	hide::yz_place Chunks::operator[](uint32_t x) noexcept

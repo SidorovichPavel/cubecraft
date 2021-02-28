@@ -47,6 +47,11 @@ la::mat4 Camera::get_view() const noexcept
 					   mUp);
 }
 
+la::mat4 Camera::get_mat4() const noexcept
+{
+	return get_perspective() * get_view();
+}
+
 la::vec3 Camera::get_direction() const noexcept
 {
 	return mDirection;

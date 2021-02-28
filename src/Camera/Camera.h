@@ -31,6 +31,7 @@ public:
 
 	la::mat4 get_perspective() const noexcept;
 	la::mat4 get_view()const noexcept;
+	la::mat4 get_mat4() const noexcept;
 	la::vec3 get_direction() const noexcept;
 	la::vec3 get_right() const noexcept;
 	la::vec3 get_up() const noexcept;

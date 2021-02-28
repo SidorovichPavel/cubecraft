@@ -34,8 +34,8 @@ void main()
 	//norm = rotate(norm, v_norm, v_angle);
 	
 	vec3 lightDir = normalize(light_pos - v_pos);
-	float diff = max(dot(norm,lightDir),0.f);
-	vec3 diffuse = diff * light_color;
+	float diff = max(dot(norm,lightDir),0.f) * max(dot(vec3(0.f,1.f,0.f), lightDir), 0.f);
+	vec3 diffuse = diff * light_color; 
 
 	vec3 specular = vec3(texture(material.specular, v_uv)) * light_color;
 

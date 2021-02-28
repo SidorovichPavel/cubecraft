@@ -23,6 +23,9 @@
     <Filter Include="src\PerlinNoise">
       <UniqueIdentifier>{8ed26131-1414-4f52-8fcf-fc4545ebcb09}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\LineBatch">
+      <UniqueIdentifier>{929c5551-566c-499d-ac36-774a28aac403}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\minecraft++.cpp">
@@ -43,18 +46,27 @@
     <ClCompile Include="src\Voxels\Chunks.cpp">
       <Filter>src\Voxels</Filter>
     </ClCompile>
+    <ClCompile Include="src\LineBatch\LineBatch.cpp">
+      <Filter>src\LineBatch</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\glsl\first.vert">
-      <Filter>res\glsl</Filter>
-    </None>
-    <None Include="res\glsl\first.frag">
-      <Filter>res\glsl</Filter>
-    </None>
     <None Include="res\glsl\mine.vert">
       <Filter>res\glsl</Filter>
     </None>
     <None Include="res\glsl\mine.frag">
+      <Filter>res\glsl</Filter>
+    </None>
+    <None Include="res\glsl\lines.frag">
+      <Filter>res\glsl</Filter>
+    </None>
+    <None Include="res\glsl\lines.vert">
+      <Filter>res\glsl</Filter>
+    </None>
+    <None Include="res\glsl\white.frag">
+      <Filter>res\glsl</Filter>
+    </None>
+    <None Include="res\glsl\white.vert">
       <Filter>res\glsl</Filter>
     </None>
   </ItemGroup>
@@ -82,6 +94,9 @@
     </ClInclude>
     <ClInclude Include="src\Voxels\VoxUtils.h">
       <Filter>src\Voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LineBatch\LineBatch.h">
+      <Filter>src\LineBatch</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

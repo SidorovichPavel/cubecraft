@@ -1,22 +1,21 @@
 #pragma once
 
 #include <src/Voxels/Chunk.h>
+#include <src/MathObjects/Vector.h>
 #include <vector>
 
 namespace voxel
 {
 	namespace hide
 	{
-		using Chunk = ::voxel::Chunk;
-
 		struct z_place;
 
 		struct yz_place
 		{
 			uint32_t x, width, height, depth;
-			::voxel::Chunk* Data;
+			Chunk* Data;
 
-			yz_place(::voxel::Chunk* _Ptr, const uint32_t _x, const uint32_t _w, const uint32_t _h, const uint32_t _d) noexcept;
+			yz_place(Chunk* _Ptr, const uint32_t _x, const uint32_t _w, const uint32_t _h, const uint32_t _d) noexcept;
 			~yz_place() noexcept;
 
 			z_place operator[](uint32_t y) noexcept;
@@ -26,13 +25,13 @@ namespace voxel
 		struct z_place
 		{
 			uint32_t x, y, width, height, depth;
-			::voxel::Chunk* Data;
+			Chunk* Data;
 
-			z_place(::voxel::Chunk* _Ptr, const uint32_t _x, const uint32_t _y, const uint32_t _w, const uint32_t _h, const uint32_t _d) noexcept;
+			z_place(Chunk* _Ptr, const uint32_t _x, const uint32_t _y, const uint32_t _w, const uint32_t _h, const uint32_t _d) noexcept;
 			~z_place();
 
-			::voxel::Chunk& operator[](uint32_t z) noexcept;
-			const ::voxel::Chunk& operator[](uint32_t z) const noexcept;
+			Chunk& operator[](uint32_t z) noexcept;
+			const Chunk& operator[](uint32_t z) const noexcept;
 		};
 	}
 
@@ -44,6 +43,12 @@ namespace voxel
 		~Chunks();
 
 		void set_neightbors(int32_t _Width, int32_t _Height, int32_t _Depth) noexcept;
+		Voxel* get(int32_t _X, int32_t _Y, int32_t _Z) noexcept;
+		void set(int32_t _X, int32_t _Y, int32_t _Z, uint8_t _ID) noexcept;
+
+		Voxel* ray_cast(const la::vec3& src, const la::vec3& dir,
+						float maxDist,
+						la::vec3& end, la::vec3& norm, la::vec3& iend);
 
 		hide::yz_place operator[](uint32_t x) noexcept;
 		const hide::yz_place operator[](uint32_t x) const noexcept;
