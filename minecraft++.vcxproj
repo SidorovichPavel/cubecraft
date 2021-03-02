@@ -166,6 +166,8 @@
     <ClCompile Include="src\Voxels\Voxel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="res\glsl\cross.frag" />
+    <None Include="res\glsl\cross.vert" />
     <None Include="res\glsl\white.frag" />
     <None Include="res\glsl\white.vert" />
     <None Include="res\glsl\mine.frag" />

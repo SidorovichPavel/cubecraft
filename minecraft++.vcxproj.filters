@@ -69,6 +69,12 @@
     <None Include="res\glsl\white.vert">
       <Filter>res\glsl</Filter>
     </None>
+    <None Include="res\glsl\cross.vert">
+      <Filter>res\glsl</Filter>
+    </None>
+    <None Include="res\glsl\cross.frag">
+      <Filter>res\glsl</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\SimpleApp\SimpleApp.h">

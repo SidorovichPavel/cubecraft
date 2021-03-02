@@ -4,10 +4,10 @@
 
 std::wstring gTitle{ L"Minecraft++" };
 tgl::View* App::appWindow;
+std::vector<tgl::Shader*> App::appShaders;
 tgl::Shader* App::ShaderFirst;
-tgl::Shader* App::MineShader;
-tgl::Shader* App::LinesShader;
 tgl::Mesh* App::WhiteCube;
+tgl::Mesh* App::ScreenCross;
 tgl::Texture2D* App::appTexture;
 tgl::Texture2D* App::appTexture2;
 tgl::Texture2D* appTexture3;
@@ -58,7 +58,19 @@ std::vector<glm::vec3> vertexes{
 	{ -.5f,  .5f, -.5f },
 };
 
+std::vector<unsigned> sc_ind{ 0,1,2,2,3,0, 4,5,6,6,7,4 };
 
+std::vector<float> sc_vert{
+	-0.01f,  0.0035f,
+	-0.01f, -0.0035f,
+	 0.01f, -0.0035f,
+	 0.01f,  0.0035f,
+
+	 -0.0015f,  0.0075f,
+	 -0.0015f, -0.0075f,
+	  0.0015f, -0.0075f,
+	  0.0015f,  0.0075f
+};
 
 
 void App::BindEvents()
@@ -106,7 +118,7 @@ void App::BindEvents()
 	appWindow->mouse_rbutton_up.attach([] (int64_t, int32_t x, int32_t)
 									   {
 										   glm::vec3 end, norm, iend;
-										   auto vox = appChunks->ray_cast(appCamera->get_position(), glm::normalize(appCamera->get_direction()),
+										   auto vox = appChunks->ray_cast(appCamera->get_position(), normalize(appCamera->get_direction()),
 																	  8.f,
 																	  end, norm, iend);
 										   if (rb_press && vox)
@@ -144,7 +156,7 @@ void App::Init(int argn, char** argc)
 	appWindow = new tgl::View(640, 480, gTitle);
 	appWindow->init_opengl();
 	appWindow->enale_opengl_context();
-	appCamera = new Camera(glm::vec3({ 0.f, 50.f, 1.f }), glm::vec3({ 0.f, 0.f, 0.f }), glm::vec3({ 0.f, 0.f, -1.f }),
+	appCamera = new Camera(glm::vec3({ 0.f, 20.f, 1.f }), glm::vec3({ 0.f, 20.f, 0.f }), glm::vec3({ 0.f, 0.f, -1.f }),
 						   640.f / 480.f, 45.f);
 	//appCamera->use_quaternoins();
 
@@ -155,20 +167,24 @@ void App::Init(int argn, char** argc)
 	tgl::gl::DebugMessageCallback(tgl::callback, nullptr);
 	#endif
 
-	MineShader = new tgl::Shader("mine");
-	MineShader->link();
 
-	MineShader->use();
-	MineShader->uniform_int("material.diffuse", 0);
+	appShaders.resize(Shader::ShCount);
+	appShaders[Shader::ShMain] = new tgl::Shader("mine");
+	appShaders[Shader::ShMain]->link();
+
+	appShaders[Shader::ShMain]->use();
+	appShaders[Shader::ShMain]->uniform_int("material.diffuse", 0);
+	tgl::gl::ActiveTexture(GL_TEXTURE0);
+
 	tgl::gl::ActiveTexture(GL_TEXTURE0);
 	appTexture = new tgl::Texture2D("textures/red_brick_3/red_brick_03_diff_1k.jpg");
 	appTexture->bind();
 
-	MineShader->uniform_int("material.normal", 1);
+	appShaders[Shader::ShMain]->uniform_int("material.normal", 1);
 	tgl::gl::ActiveTexture(GL_TEXTURE1);
 	appTexture2 = new tgl::Texture2D("textures/red_brick_3/red_brick_03_nor_1k.jpg");
 	appTexture2->bind();
-	MineShader->uniform_int("material.specular", 2);
+	appShaders[Shader::ShMain]->uniform_int("material.specular", 2);
 	tgl::gl::ActiveTexture(GL_TEXTURE3);
 	appTexture3 = new tgl::Texture2D("textures/red_brick_3/red_brick_03_spec_1k.jpg");
 	appTexture3->bind();
@@ -180,10 +196,17 @@ void App::Init(int argn, char** argc)
 	WhiteCube->set_attribut<3>(vertexes.size() * 3, (float*)vertexes.data());
 	WhiteCube->set_indices(indices.size(), indices.data());
 
-	LinesShader = new tgl::Shader("lines");
-	LinesShader->link();
+	appShaders[Shader::ShLine] = new tgl::Shader("lines");
+	appShaders[Shader::ShLine]->link();
 
 	appLineBatch = new LineBatch(50);
+
+	appShaders[Shader::ShScreenCross] = new tgl::Shader("cross");
+	appShaders[Shader::ShScreenCross]->link();
+
+	ScreenCross = new tgl::Mesh();
+	ScreenCross->set_attribut<2>(sc_vert.size(), sc_vert.data());
+	ScreenCross->set_indices(sc_ind.size(), sc_ind.data());
 
 	appChunks = new voxel::Chunks(gWorldWidth, gWorldHeight, gWorldDepth);
 
@@ -262,12 +285,6 @@ void App::Render()
 
 	//shader-draw section
 	{
-		model = glm::mat4(1.f);
-		view = appCamera->get_view();
-		perspective = appCamera->get_perspective();
-		auto transform = perspective * view * model;
-
-
 		static float angle = 0.f;
 		glm::vec3 light_pos = glm::vec3{
 			20 * cosf(angle),
@@ -277,28 +294,38 @@ void App::Render()
 		angle += 0.015f;
 		glm::vec3 light_pos2{ 0,25,0 };
 		glm::vec3 light_color(1.f);
+		
+		model = glm::mat4(1.f);
+		view = appCamera->get_view();
+		perspective = appCamera->get_perspective();
+
+		auto transform = perspective * view * model;
 
 		tgl::gl::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		tgl::gl::glClearColor(0.f, 0.f, 0.f, 1.f);
 
-		MineShader->use();
-		MineShader->uniform_matrix4f("transform", &transform);
-		MineShader->uniform_vector3f("light_pos", &light_pos2);//light_pos.data());//appCamera->get_position().data());
-		MineShader->uniform_vector3f("light_color", &light_color);
+		appShaders[Shader::ShMain]->use();
+		appShaders[Shader::ShMain]->uniform_matrix4f("transform", &transform);
+		appShaders[Shader::ShMain]->uniform_vector3f("light_pos", &light_pos2);
+		appShaders[Shader::ShMain]->uniform_vector3f("light_color", &light_color);
 
 		for (auto& e : *appChunks)
 			e.draw();
 		
 		model = glm::translate(model, light_pos2);
 		
-		auto camera_mat = appCamera->get_mat4();
 		ShaderFirst->use();
+		transform = perspective * view * model;
 		ShaderFirst->uniform_matrix4f("transform", &transform);
 		WhiteCube->draw(GL_TRIANGLES);
 
-		LinesShader->use();
-		LinesShader->uniform_matrix4f("camera_mat4", &camera_mat);
+		appShaders[Shader::ShLine]->use();
+		auto camera_mat = appCamera->get_mat4();
+		appShaders[Shader::ShLine]->uniform_matrix4f("camera_mat4", &camera_mat);
 		appLineBatch->draw();
+
+		appShaders[Shader::ShScreenCross]->use();
+		ScreenCross->draw(GL_TRIANGLES);
 	}
 	//draw end
 
@@ -348,8 +375,10 @@ int App::Run()
 
 void App::Terminate()
 {
+	for (auto& s : appShaders)
+		delete s;
+	delete ScreenCross;
 	delete ShaderFirst;
-	delete MineShader;
 	delete appChunks;
 	delete appTexture;
 	delete appTexture2;

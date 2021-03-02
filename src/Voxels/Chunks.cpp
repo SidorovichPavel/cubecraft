@@ -1,4 +1,5 @@
 #include <src/Voxels/Chunks.h>
+#include <iostream>
 
 namespace voxel
 {
@@ -165,22 +166,15 @@ namespace voxel
 							float maxDist,
 							glm::vec3& end, glm::vec3& norm, glm::vec3& iend)
 	{
-		auto box_intersect = [] (const glm::vec3& _Ray_Pos, const glm::vec3& _Dir,
-								 const glm::vec3& _Size, glm::vec3& _Normal) -> glm::vec2
-		{
-			glm::vec3 inv_dir = 1.f / _Dir;
-			glm::vec3 n = inv_dir * _Dir;
-			glm::vec3 k = abs(inv_dir) * _Size;
-			glm::vec3 t1 = -n - k;
-			glm::vec3 t2 = -n + k;
-			float tn = fmaxf(fmaxf(t1.x, t1.y), t1.z);
-			float tf = fminf(fminf(t2.x, t2.y), t2.z);
+		glm::ivec3 pos;
+		pos.x = floor(src.x);
+		pos.y = floor(src.y);
+		pos.z = floor(src.z);
 
-			if (tn > tf || tf < 0.f)return glm::vec2{ -1.0,0.f };
-
-			return glm::vec2();
-		};
-
+		glm::vec3 box_pos;
+		box_pos.x = dir.x == 0.f ? pos.x : pos.x + floor(dir.x);
+		box_pos.y = dir.y == 0.f ? pos.y : pos.y + floor(dir.y);
+		box_pos.z = dir.z == 0.f ? pos.z : pos.z + floor(dir.z);
 
 		float px = src.x;
 		float py = src.y;
