@@ -731,7 +731,7 @@ namespace detail
 #ifdef GLM_FORCE_XYZW_ONLY
 #	define GLM_CONFIG_XYZW_ONLY GLM_ENABLE
 #else
-#	define GLM_CONFIG_XYZW_ONLY GLM_DISABLE
+#	define GLM_CONFIG_XYZW_ONLY GLM_ENABLE
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////
