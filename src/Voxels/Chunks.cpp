@@ -1,5 +1,4 @@
 #include <src/Voxels/Chunks.h>
-#include <iostream>
 
 namespace voxel
 {
@@ -112,7 +111,9 @@ namespace voxel
 		auto ly = _Y - (y << Chunk::HEIGHT_SHIFT);
 		auto lz = _Z - (z << Chunk::DEPTH_SHIFT);
 
-		if (lx < 0 || lx >= Chunk::WIDTH || ly < 0 || ly >= Chunk::HEIGHT || lz < 0 || lz >= Chunk::DEPTH)
+		if (lx < 0 || lx >= Chunk::WIDTH || 
+			ly < 0 || ly >= Chunk::HEIGHT || 
+			lz < 0 || lz >= Chunk::DEPTH)
 			return nullptr;
 
 		decltype(auto) chunk = (*this)[cx][cy][cz];
@@ -166,16 +167,6 @@ namespace voxel
 							float maxDist,
 							glm::vec3& end, glm::vec3& norm, glm::vec3& iend)
 	{
-		glm::ivec3 pos;
-		pos.x = floor(src.x);
-		pos.y = floor(src.y);
-		pos.z = floor(src.z);
-
-		glm::vec3 box_pos;
-		box_pos.x = dir.x == 0.f ? pos.x : pos.x + floor(dir.x);
-		box_pos.y = dir.y == 0.f ? pos.y : pos.y + floor(dir.y);
-		box_pos.z = dir.z == 0.f ? pos.z : pos.z + floor(dir.z);
-
 		float px = src.x;
 		float py = src.y;
 		float pz = src.z;
@@ -189,15 +180,15 @@ namespace voxel
 		int iy = static_cast<int>(floor(py));
 		int iz = static_cast<int>(floor(pz));
 
-		float stepx = (dx > 0.0f) ? 1.0f : -1.0f;
-		float stepy = (dy > 0.0f) ? 1.0f : -1.0f;
-		float stepz = (dz > 0.0f) ? 1.0f : -1.0f;
+		float stepx = (dx > 0.0f) ? 1.f : -1.f;
+		float stepy = (dy > 0.0f) ? 1.f : -1.f;
+		float stepz = (dz > 0.0f) ? 1.f : -1.f;
 
 		constexpr float infinity = std::numeric_limits<float>::infinity();
 
-		float txDelta = (dx == 0.0f) ? infinity : abs(1.0f / dx);
-		float tyDelta = (dy == 0.0f) ? infinity : abs(1.0f / dy);
-		float tzDelta = (dz == 0.0f) ? infinity : abs(1.0f / dz);
+		float txDelta = (dx == 0.0f) ? infinity : abs(1.f/dx);
+		float tyDelta = (dy == 0.0f) ? infinity : abs(1.f/dy);
+		float tzDelta = (dz == 0.0f) ? infinity : abs(1.f/dz);
 
 		float xdist = (stepx > 0) ? (ix + 1 - px) : (px - ix);
 		float ydist = (stepy > 0) ? (iy + 1 - py) : (py - iy);

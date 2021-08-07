@@ -3,7 +3,7 @@
 #include <iostream>
 
 std::wstring gTitle{ L"Minecraft++" };
-tgl::View* App::appWindow;
+tgl::View<tgl::win::WinHandler>* App::appWindow;
 std::vector<tgl::Shader*> App::appShaders;
 tgl::Shader* App::ShaderFirst;
 tgl::Mesh* App::WhiteCube;
@@ -78,21 +78,21 @@ void App::BindEvents()
 	if (!appWindow || !appCamera)
 		throw std::runtime_error("what you doing");
 
-	appWindow->size_event.attach(appCamera, &Camera::update_aspect);
+	appWindow->events().size.attach(appCamera, &Camera::update_aspect);
 
-	appWindow->size_event.attach([] (uint16_t x, uint16_t y)
+	appWindow->events().size.attach([] (uint16_t x, uint16_t y)
 								 {
 									 tgl::gl::glViewport(0, 0, x, y);
 								 });
-	appWindow->mouse_wheel_event.attach(appCamera, &Camera::update_Fovy);
+	appWindow->events().mouse_wheel.attach(appCamera, &Camera::update_Fovy);
 
-	appWindow->key_down_event.attach([] (int64_t code, int64_t)
+	appWindow->events().key_down.attach([] (int64_t code, int64_t)
 									 {
 										 if (code >= 0 && code < 1024)
 											 appKeys[code] = true;
 									 });
 
-	appWindow->key_down_event.attach([] (int64_t code, int64_t)
+	appWindow->events().key_down.attach([] (int64_t code, int64_t)
 									 {
 										 if (code == VK_TAB)
 											 appLockCursor = !appLockCursor;
@@ -103,19 +103,19 @@ void App::BindEvents()
 											 appWindow->disable_mouse_raw_input();
 									 });
 
-	appWindow->key_up_event.attach([] (int64_t code, int64_t)
+	appWindow->events().key_up.attach([] (int64_t code, int64_t)
 								   {
 									   if (code >= 0 && code < 1024)
 										   appKeys[code] = false;
 								   });
 
-	appWindow->mouse_raw_input_event.attach([] (int32_t dx, int32_t dy)
+	appWindow->events().mouse_raw_input.attach([] (int32_t dx, int32_t dy)
 											{
 												appCamera->update_angles(dy * -appMouseSensitivity * FrameTime,
 																		 dx * -appMouseSensitivity * FrameTime,
 																		 0.f);
 											});
-	appWindow->mouse_rbutton_up.attach([] (int64_t, int32_t x, int32_t)
+	appWindow->events().mouse_rbutton_up.attach([] (int64_t, int32_t x, int32_t)
 									   {
 										   glm::vec3 end, norm, iend;
 										   auto vox = appChunks->ray_cast(appCamera->get_position(), normalize(appCamera->get_direction()),
@@ -127,7 +127,7 @@ void App::BindEvents()
 										   }
 										   rb_press = false;
 									   });
-	appWindow->mouse_rbutton_down.attach([] (int64_t, int32_t x, int32_t)
+	appWindow->events().mouse_rbutton_down.attach([] (int64_t, int32_t x, int32_t)
 										 {
 											 rb_press = true;
 										 });
@@ -137,23 +137,23 @@ void App::DetachEvents()
 {
 	assert(appWindow);
 	appWindow->disable_mouse_raw_input();
-	appWindow->create_event.detach_all();
-	appWindow->key_down_event.detach_all();
-	appWindow->key_up_event.detach_all();
-	appWindow->mouse_move_event.detach_all();
-	appWindow->mouse_raw_input_event.detach_all();
-	appWindow->mouse_wheel_event.detach_all();
-	appWindow->move_event.detach_all();
-	appWindow->moving_event.detach_all();
-	appWindow->raw_input_event.detach_all();
-	appWindow->size_event.detach_all();
+	appWindow->events().create.detach_all();
+	appWindow->events().key_down.detach_all();
+	appWindow->events().key_up.detach_all();
+	appWindow->events().mouse_move.detach_all();
+	appWindow->events().mouse_raw_input.detach_all();
+	appWindow->events().mouse_wheel.detach_all();
+	appWindow->events().move.detach_all();
+	appWindow->events().moving.detach_all();
+	appWindow->events().raw_input.detach_all();
+	appWindow->events().size.detach_all();
 }
 
 void App::Init(int argn, char** argc)
 {
 	tgl::Init();
 
-	appWindow = new tgl::View(640, 480, gTitle);
+	appWindow = new tgl::View<tgl::win::WinHandler>(800, 600, gTitle);
 	appWindow->init_opengl();
 	appWindow->enale_opengl_context();
 	appCamera = new Camera(glm::vec3({ 0.f, 20.f, 1.f }), glm::vec3({ 0.f, 20.f, 0.f }), glm::vec3({ 0.f, 0.f, -1.f }),
