@@ -64,23 +64,20 @@ void LineBatch::box(const glm::vec3& _Pos, const glm::vec3& _Size, const glm::ve
 		push_v4(_Color);
 	}
 
-	mIndices.push_back(index + 0);
-	mIndices.push_back(index + 1);
-	mIndices.push_back(index + 1);
-	mIndices.push_back(index + 2);
-	mIndices.push_back(index + 2);
-	mIndices.push_back(index + 3);
-	mIndices.push_back(index + 3);
-	mIndices.push_back(index + 0);
+	auto fill_indices = [&] (int offset = 0)
+	{
+		mIndices.push_back(index + offset + 0);
+		mIndices.push_back(index + offset + 1);
+		mIndices.push_back(index + offset + 1);
+		mIndices.push_back(index + offset + 2);
+		mIndices.push_back(index + offset + 2);
+		mIndices.push_back(index + offset + 3);
+		mIndices.push_back(index + offset + 3);
+		mIndices.push_back(index + offset + 0);
+	};
 
-	mIndices.push_back(index + 4);
-	mIndices.push_back(index + 5);
-	mIndices.push_back(index + 5);
-	mIndices.push_back(index + 6);
-	mIndices.push_back(index + 6);
-	mIndices.push_back(index + 7);
-	mIndices.push_back(index + 7);
-	mIndices.push_back(index + 4);
+	fill_indices();
+	fill_indices(4);
 
 	mIndices.push_back(index + 0);
 	mIndices.push_back(index + 4);

@@ -18,7 +18,7 @@ tgl::TextureAtlas2D* appAtlas;
 
 std::bitset<1024> App::appKeys;
 bool App::appLockCursor = false;
-float App::appMouseSensitivity = 0.025f;
+float App::appMouseSensitivity = 0.07f;
 float appCameraSpeed = 16.f;
 
 size_t App::PrevTime;
@@ -170,7 +170,6 @@ void App::Init(int argn, char** argc)
 
 	appShaders.resize(Shader::ShCount);
 	appShaders[Shader::ShMain] = new tgl::Shader("mine");
-	appShaders[Shader::ShMain]->link();
 
 	appShaders[Shader::ShMain]->use();
 	appShaders[Shader::ShMain]->uniform_int("material.diffuse", 0);
@@ -190,19 +189,16 @@ void App::Init(int argn, char** argc)
 	appTexture3->bind();
 
 	ShaderFirst = new tgl::Shader("white");
-	ShaderFirst->link();
 
 	WhiteCube = new tgl::Mesh();
 	WhiteCube->set_attribut<3>(vertexes.size() * 3, (float*)vertexes.data());
 	WhiteCube->set_indices(indices.size(), indices.data());
 
 	appShaders[Shader::ShLine] = new tgl::Shader("lines");
-	appShaders[Shader::ShLine]->link();
 
 	appLineBatch = new LineBatch(50);
 
 	appShaders[Shader::ShScreenCross] = new tgl::Shader("cross");
-	appShaders[Shader::ShScreenCross]->link();
 
 	ScreenCross = new tgl::Mesh();
 	ScreenCross->set_attribut<2>(sc_vert.size(), sc_vert.data());
@@ -345,9 +341,13 @@ int App::Run()
 		size_t wait{};
 		size_t ret{ WAIT_TIMEOUT };
 
-		while (tgl::win::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
-			tgl::win::TranslateMessage(&msg);
-			tgl::win::DispatchMessage(&msg);
+		int iOK = 1;
+		if (tgl::win::PeekMessage(&msg, nullptr, 0, 0, PM_NOREMOVE)) {
+			for (; iOK > 0; iOK = GetMessage(&msg, nullptr, 0, 0)) {
+				if (iOK == -1) break;
+				tgl::win::TranslateMessage(&msg);
+				tgl::win::DispatchMessage(&msg);
+			}
 		}
 
 		if (ms < msNext)
