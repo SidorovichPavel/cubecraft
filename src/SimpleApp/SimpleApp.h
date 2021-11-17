@@ -20,7 +20,7 @@ private:
 
 	static voxel::Chunks* appChunks;
 
-	static tgl::View<tgl::win::WinHandler>* appWindow;
+	static tgl::View* appWindow;
 	static tgl::Timer* Timer;
 	static std::vector<tgl::Shader*> appShaders;
 	static tgl::Shader* ShaderFirst;

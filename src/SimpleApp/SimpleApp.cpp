@@ -3,7 +3,7 @@
 #include <iostream>
 
 std::wstring gTitle{ L"Minecraft++" };
-tgl::View<tgl::win::WinHandler>* App::appWindow;
+tgl::View* App::appWindow;
 std::vector<tgl::Shader*> App::appShaders;
 tgl::Shader* App::ShaderFirst;
 tgl::Mesh* App::WhiteCube;
@@ -109,12 +109,6 @@ void App::BindEvents()
 										   appKeys[code] = false;
 								   });
 
-	appWindow->events().mouse_raw_input.attach([] (int32_t dx, int32_t dy)
-											{
-												appCamera->update_angles(dy * -appMouseSensitivity * FrameTime,
-																		 dx * -appMouseSensitivity * FrameTime,
-																		 0.f);
-											});
 	appWindow->events().mouse_rbutton_up.attach([] (int64_t, int32_t x, int32_t)
 									   {
 										   glm::vec3 end, norm, iend;

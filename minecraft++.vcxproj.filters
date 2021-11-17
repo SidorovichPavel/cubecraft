@@ -11,9 +11,6 @@
     <Filter Include="res\glsl">
       <UniqueIdentifier>{33269cf3-48c0-48b5-9a54-48767eede963}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\SimpleApp">
-      <UniqueIdentifier>{27cfd07d-82bd-4b5c-83f9-80d1018da98e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\Voxels">
       <UniqueIdentifier>{9fdd66b0-f68b-489c-8c1d-9a1411981293}</UniqueIdentifier>
     </Filter>
@@ -27,9 +24,6 @@
   <ItemGroup>
     <ClCompile Include="src\minecraft++.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\SimpleApp\SimpleApp.cpp">
-      <Filter>src\SimpleApp</Filter>
     </ClCompile>
     <ClCompile Include="src\Voxels\Chunk.cpp">
       <Filter>src\Voxels</Filter>
@@ -69,11 +63,10 @@
     <None Include="res\glsl\cross.frag">
       <Filter>res\glsl</Filter>
     </None>
+    <None Include="res\glsl\base.vert" />
+    <None Include="res\glsl\base.frag" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\SimpleApp\SimpleApp.h">
-      <Filter>src\SimpleApp</Filter>
-    </ClInclude>
     <ClInclude Include="src\incs.h">
       <Filter>src</Filter>
     </ClInclude>
