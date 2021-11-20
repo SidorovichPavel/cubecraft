@@ -91,7 +91,7 @@ void LineBatch::box(const glm::vec3& _Pos, const glm::vec3& _Size, const glm::ve
 
 void LineBatch::render()
 {
-	mMesh->set_attribut<attribs_pack>(mBuffer.size(), mBuffer.data());
+	mMesh->set_attribut<attribs_pack>(mBuffer.size(), mBuffer.data(), GL_STATIC_DRAW);
 	mMesh->set_indices(mIndices.size(), mIndices.data());
 
 	mBuffer.clear();
