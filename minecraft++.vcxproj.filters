@@ -20,6 +20,9 @@
     <Filter Include="src\LineBatch">
       <UniqueIdentifier>{929c5551-566c-499d-ac36-774a28aac403}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Utils">
+      <UniqueIdentifier>{70a1c44b-5337-4dd3-881a-bd278a218a73}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\minecraft++.cpp">
@@ -67,9 +70,6 @@
     <None Include="res\glsl\base.frag" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\incs.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\Voxels\Voxel.h">
       <Filter>src\Voxels</Filter>
     </ClInclude>
@@ -87,6 +87,9 @@
     </ClInclude>
     <ClInclude Include="src\LineBatch\LineBatch.h">
       <Filter>src\LineBatch</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\Utility.h">
+      <Filter>src\Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

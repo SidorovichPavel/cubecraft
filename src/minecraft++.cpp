@@ -5,6 +5,7 @@
 #include <chrono>
 
 #include <src/glm/glm.hpp>
+#include <src/Style/Style.h>
 #include <src/View/View.h>
 #include <src/View/Mouse.h>
 #include <src/View/KeyBoard.h>
@@ -14,12 +15,11 @@
 #include <src/glm/glm.hpp>
 #include <src/glm/ext.hpp>
 #include <src/Camera/Camera.h>
+
+#include "Utils/Utility.h"
 #include "Voxels/Chunks.h"
 
 void processing(float ft, tgl::View& _View, tgl::Mouse& _Mouse, tgl::KeyBoard& _KeyBoard, ta::Camera& _Camera) noexcept;
-
-std::pair<float, std::chrono::time_point<std::chrono::steady_clock>>
-frame_time(std::chrono::time_point<std::chrono::steady_clock> _Prev_Time_Point) noexcept;
 
 int main(int argc, char** args)
 {
@@ -30,9 +30,12 @@ int main(int argc, char** args)
 	tgl::gl::DebugMessageCallback(tgl::gl::callback, nullptr);
 #endif
 
-	std::unique_ptr<tgl::View> window(new tgl::View(800, 600, "Cube++"));
+	auto style = new tgl::Style("Cube++", 0, 0, 640, 480);
+	std::unique_ptr<tgl::View> window(new tgl::View(style));
 	window->init_opengl();
-	window->enale_opengl_context();
+	window->enable_opengl_context();
+
+	tgl::Mouse::raw_input;
 
 	tgl::Mouse mouse;
 	tgl::KeyBoard keyboard;
@@ -41,14 +44,14 @@ int main(int argc, char** args)
 	events.key_down.attach(&keyboard, &tgl::KeyBoard::key_down);
 	events.key_up.attach(&keyboard, &tgl::KeyBoard::key_up);
 	events.size.attach(std::bind(tgl::view_port_ex, 0, 0, std::placeholders::_1, std::placeholders::_2));
-
-	ta::Camera camera(
-		glm::vec3(0.f, 0.f, 2.f), 
-		glm::vec3(0.f, 0.f, 0.f), 
-		glm::vec3(0.f, 1.f, 0.f),
-		window->get_ratio(), 
-		45.f);
 	
+	ta::Camera camera(
+		glm::vec3(0.f, 0.f, 2.f),
+		glm::vec3(0.f, 0.f, 0.f),
+		glm::vec3(0.f, 1.f, 0.f),
+		window->get_ratio(),
+		45.f);
+
 	events.size.attach(&camera, &ta::Camera::update_aspect);
 	events.mouse_wheel.attach(&camera, &ta::Camera::update_Fovy);
 
@@ -70,24 +73,29 @@ int main(int argc, char** args)
 	tgl::Shader::path_prefix = "res\\glsl\\";
 	tgl::Shader base("base");
 
+	auto update_frame_time = [](std::chrono::time_point<std::chrono::steady_clock> _Prev_TP)
+	{
+		auto current = std::chrono::steady_clock::now();
+		std::chrono::duration<float> duration = current - _Prev_TP;
 
-	auto frame = frame_time(std::chrono::steady_clock::now());
-	
-	std::pair<bool, int> pool_res;
+		return FrameTimeInfo(duration.count(), current);
+	};
+	FrameTimeInfo frame = update_frame_time(std::chrono::steady_clock::now());
+
 	bool isRunnig = window->is_open();
+
 	for (; isRunnig;)
 	{
-		pool_res = tgl::event_pool();
+		auto [update, wParam] = tgl::event_pool();
+		
+		isRunnig = window->is_open();
 
-		if (!window->is_open())
-			break;
-
-		if (!pool_res.first)
+		if (!update || !window->is_open())
 			continue;
 
 		tgl::clear_black();
 
-		processing(frame.first, *window, mouse, keyboard, camera);
+		processing(frame.duration, *window, mouse, keyboard, camera);
 
 		base.use();
 		modelMat = glm::mat4(1.f);
@@ -97,19 +105,10 @@ int main(int argc, char** args)
 
 		window->swap_buffers();
 
-		frame = frame_time(frame.second);
+		frame = update_frame_time(frame.timepoint);
 	}
 
-	return pool_res.second;
-}
-
-std::pair<float, std::chrono::time_point<std::chrono::steady_clock>>
-frame_time(std::chrono::time_point<std::chrono::steady_clock> _Prev_Time_Point) noexcept
-{
-	auto current = std::chrono::steady_clock::now();
-	std::chrono::duration<float> duration = current - _Prev_Time_Point;
-	
-	return std::pair<float, std::chrono::time_point<std::chrono::steady_clock>>(duration.count(), current);
+	return 0;
 }
 
 void processing(float ft, tgl::View& _View, tgl::Mouse& _Mouse, tgl::KeyBoard& _KeyBoard, ta::Camera& _Camera) noexcept

@@ -1,4 +1,5 @@
-#include <src/Voxels/Voxel.h>
+#include "Voxel.h"
+
 #include <assert.h>
 
 namespace voxel

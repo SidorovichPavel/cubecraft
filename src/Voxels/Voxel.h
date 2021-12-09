@@ -32,9 +32,6 @@ namespace voxel
 			Voxel& operator[](uint32_t _Z) noexcept;
 			const Voxel& operator[](uint32_t _Z) const noexcept;
 		};
-
-
-
 	}
 
 	struct Voxel
