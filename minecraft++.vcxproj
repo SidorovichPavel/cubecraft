@@ -184,12 +184,12 @@
     <None Include="res\glsl\lines.vert" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\LineBatch\LineBatch.h" />
-    <ClInclude Include="src\PerlinNoise\PerlinNoise.h" />
-    <ClInclude Include="src\Utils\Utility.h" />
-    <ClInclude Include="src\Voxels\Chunks.h" />
-    <ClInclude Include="src\Voxels\Chunk.h" />
-    <ClInclude Include="src\Voxels\Voxel.h" />
+    <ClInclude Include="src\LineBatch\LineBatch.hpp" />
+    <ClInclude Include="src\PerlinNoise\PerlinNoise.hpp" />
+    <ClInclude Include="src\Utils\Utility.hpp" />
+    <ClInclude Include="src\Voxels\Chunks.hpp" />
+    <ClInclude Include="src\Voxels\Chunk.hpp" />
+    <ClInclude Include="src\Voxels\Voxel.hpp" />
     <ClInclude Include="src\Voxels\VoxUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,4 +1,4 @@
-#include <src/LineBatch/LineBatch.h>
+#include "LineBatch.hpp"
 
 std::vector<glm::vec3> LineBatch::staticDirections = {
 	{ 1.f, 1.f, 1.f },

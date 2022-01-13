@@ -4,20 +4,21 @@
 #include <array>
 #include <chrono>
 
+#include <src/Style/Style.hpp>
+#include <src/View/View.hpp>
+#include <src/View/Mouse.hpp>
+#include <src/View/KeyBoard.hpp>
+#include <src/Shader/Shader.hpp>
+#include <src/Mesh/Mesh.hpp>
+#include <src/tinyGL.hpp>
+
 #include <src/glm/glm.hpp>
-#include <src/Style/Style.h>
-#include <src/View/View.h>
-#include <src/View/Mouse.h>
-#include <src/View/KeyBoard.h>
-#include <src/Shader/Shader.h>
-#include <src/Mesh/Mesh.h>
-#include <src/tinyGL.h>
 #include <src/glm/glm.hpp>
 #include <src/glm/ext.hpp>
 #include <src/Camera/Camera.h>
 
-#include "Utils/Utility.h"
-#include "Voxels/Chunks.h"
+#include "Utils/Utility.hpp"
+#include "Voxels/Chunks.hpp"
 
 void processing(float ft, tgl::View& _View, tgl::Mouse& _Mouse, tgl::KeyBoard& _KeyBoard, ta::Camera& _Camera) noexcept;
 
@@ -34,9 +35,7 @@ int main(int argc, char** args)
 	std::unique_ptr<tgl::View> window(new tgl::View(style));
 	window->init_opengl();
 	window->enable_opengl_context();
-
-	tgl::Mouse::raw_input;
-
+	
 	tgl::Mouse mouse;
 	tgl::KeyBoard keyboard;
 	auto& events = window->events();
@@ -66,7 +65,6 @@ int main(int argc, char** args)
 	std::array<unsigned, 3> indices = { 0,1,2 };
 
 	tgl::Mesh mesh;
-	mesh.gen();
 	mesh.set_attribut<3, 3>(attribs.size(), attribs.data(), GL_STATIC_DRAW);
 	mesh.set_indices(indices.size(), indices.data());
 	mesh.bind();

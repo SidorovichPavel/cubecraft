@@ -1,7 +1,8 @@
-#include <src/Voxels/Chunk.h>
+#include "Chunk.hpp"
+#include "../PerlinNoise/PerlinNoise.hpp"
+
 #include <algorithm>
 #include <iterator>
-#include <src/PerlinNoise/PerlinNoise.h>
 
 #pragma warning(disable:26451)
 

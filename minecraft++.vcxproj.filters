@@ -70,25 +70,25 @@
     <None Include="res\glsl\base.frag" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Voxels\Voxel.h">
+    <ClInclude Include="src\Voxels\Voxel.hpp">
       <Filter>src\Voxels</Filter>
     </ClInclude>
-    <ClInclude Include="src\Voxels\Chunk.h">
+    <ClInclude Include="src\Voxels\Chunk.hpp">
       <Filter>src\Voxels</Filter>
     </ClInclude>
-    <ClInclude Include="src\PerlinNoise\PerlinNoise.h">
+    <ClInclude Include="src\PerlinNoise\PerlinNoise.hpp">
       <Filter>src\PerlinNoise</Filter>
     </ClInclude>
-    <ClInclude Include="src\Voxels\Chunks.h">
+    <ClInclude Include="src\Voxels\Chunks.hpp">
       <Filter>src\Voxels</Filter>
     </ClInclude>
     <ClInclude Include="src\Voxels\VoxUtils.h">
       <Filter>src\Voxels</Filter>
     </ClInclude>
-    <ClInclude Include="src\LineBatch\LineBatch.h">
+    <ClInclude Include="src\LineBatch\LineBatch.hpp">
       <Filter>src\LineBatch</Filter>
     </ClInclude>
-    <ClInclude Include="src\Utils\Utility.h">
+    <ClInclude Include="src\Utils\Utility.hpp">
       <Filter>src\Utils</Filter>
     </ClInclude>
   </ItemGroup>
