@@ -13,7 +13,6 @@
 #include <src/tinyGL.hpp>
 
 #include <src/glm/glm.hpp>
-#include <src/glm/glm.hpp>
 #include <src/glm/ext.hpp>
 #include <src/Camera/Camera.h>
 
