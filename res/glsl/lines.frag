@@ -1,9 +1,10 @@
 #version 330
 
-in vec4 v_Color;
+uniform vec3 uColor;
+
 out vec4 Result;
 
 void main()
 {
-	Result = v_Color;
+	Result = vec4(uColor,1.f);
 }

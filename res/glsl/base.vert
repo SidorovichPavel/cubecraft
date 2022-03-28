@@ -1,14 +1,18 @@
 #version 330
 
 layout (location = 0) in vec3 vPosition;
-layout (location = 1) in vec3 vColor;
+layout (location = 1) in vec3 vNormal;
 
-out vec3 fColor;
+out vec3 fNormal;
+out vec3 fPosition;
 
-uniform mat4 transform;
+uniform mat4 world;
+uniform mat4 model;
 
 void main()
 {
-	fColor = vColor;
-	gl_Position = transform * vec4(vPosition, 1.f);
+	fPosition = vec3(model * vec4(vPosition, 1.f));
+	fNormal = vNormal;
+
+	gl_Position = world * model * vec4(vPosition, 1.f);
 }
