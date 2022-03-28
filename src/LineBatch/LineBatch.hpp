@@ -1,7 +1,7 @@
 #pragma once
 
-#include <src/glm/glm.hpp>
-#include <src/Mesh/Mesh.hpp>
+#include <glm/glm.hpp>
+#include <Mesh/Mesh.hpp>
 #include <vector>
 
 
