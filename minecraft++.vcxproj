@@ -90,7 +90,7 @@
       <PreprocessorDefinitions>NOMINMAX;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)..\SOIL\;$(SolutionDir)..\tinyGL\;$(SolutionDir)..\tinyAlgebra\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\SOIL\src;$(SolutionDir)..\tinyGL\src;$(SolutionDir)..\tinyAlgebra\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -108,7 +108,7 @@
       <PreprocessorDefinitions>NOMINMAX;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)..\SOIL\;$(SolutionDir)..\tinyGL\;$(SolutionDir)..\tinyAlgebra\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\SOIL\src;$(SolutionDir)..\tinyGL\src;$(SolutionDir)..\tinyAlgebra\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -125,7 +125,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NOMINMAX;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\SOIL\;$(SolutionDir)..\tinyGL\;$(SolutionDir)..\tinyAlgebra\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\SOIL\src;$(SolutionDir)..\tinyGL\src;$(SolutionDir)..\tinyAlgebra\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -143,7 +143,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NOMINMAX;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\SOIL\;$(SolutionDir)..\tinyGL\;$(SolutionDir)..\tinyAlgebra\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\SOIL\src;$(SolutionDir)..\tinyGL\src;$(SolutionDir)..\tinyAlgebra\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -165,6 +165,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Game\Game.cpp" />
+    <ClCompile Include="src\MineDevices\MineKeyBoard.cpp" />
+    <ClCompile Include="src\MineDevices\MineMouse.cpp" />
     <ClCompile Include="src\LineBatch\LineBatch.cpp" />
     <ClCompile Include="src\minecraft++.cpp" />
     <ClCompile Include="src\Voxels\Chunk.cpp" />
@@ -184,6 +187,10 @@
     <None Include="res\glsl\lines.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Game\Game.hpp" />
+    <ClInclude Include="src\Game\Player.hpp" />
+    <ClInclude Include="src\MineDevices\MineKeyBoard.hpp" />
+    <ClInclude Include="src\MineDevices\MineMouse.hpp" />
     <ClInclude Include="src\LineBatch\LineBatch.hpp" />
     <ClInclude Include="src\PerlinNoise\PerlinNoise.hpp" />
     <ClInclude Include="src\Utils\Utility.hpp" />

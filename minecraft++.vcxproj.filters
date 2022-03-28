@@ -23,6 +23,12 @@
     <Filter Include="src\Utils">
       <UniqueIdentifier>{70a1c44b-5337-4dd3-881a-bd278a218a73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\MineDevices">
+      <UniqueIdentifier>{8e33c6c1-b4cd-4d79-8849-c78f5752c341}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Game">
+      <UniqueIdentifier>{cc98f0d1-786b-4bdf-9d30-3e1ef34a958e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\minecraft++.cpp">
@@ -39,6 +45,15 @@
     </ClCompile>
     <ClCompile Include="src\LineBatch\LineBatch.cpp">
       <Filter>src\LineBatch</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MineDevices\MineMouse.cpp">
+      <Filter>src\MineDevices</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MineDevices\MineKeyBoard.cpp">
+      <Filter>src\MineDevices</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game\Game.cpp">
+      <Filter>src\Game</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -66,8 +81,12 @@
     <None Include="res\glsl\cross.frag">
       <Filter>res\glsl</Filter>
     </None>
-    <None Include="res\glsl\base.vert" />
-    <None Include="res\glsl\base.frag" />
+    <None Include="res\glsl\base.vert">
+      <Filter>res\glsl</Filter>
+    </None>
+    <None Include="res\glsl\base.frag">
+      <Filter>res\glsl</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Voxels\Voxel.hpp">
@@ -91,5 +110,15 @@
     <ClInclude Include="src\Utils\Utility.hpp">
       <Filter>src\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\MineDevices\MineMouse.hpp">
+      <Filter>src\MineDevices</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MineDevices\MineKeyBoard.hpp">
+      <Filter>src\MineDevices</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Game.hpp">
+      <Filter>src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Player.hpp" />
   </ItemGroup>
 </Project>
