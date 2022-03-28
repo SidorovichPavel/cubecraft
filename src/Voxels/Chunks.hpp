@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Chunk.hpp"
-#include <src/glm/glm.hpp>
+#include <glm/glm.hpp>
 #include <vector>
 
 namespace voxel

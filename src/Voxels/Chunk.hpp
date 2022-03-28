@@ -2,8 +2,8 @@
 
 #include "Voxel.hpp"
 
-#include <src/Mesh/Mesh.hpp>
-#include <src/glm/glm.hpp>
+#include <Mesh/Mesh.hpp>
+#include <glm/glm.hpp>
 #include <vector>
 #include <array>
 

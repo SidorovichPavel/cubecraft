@@ -209,7 +209,7 @@ namespace voxel
 		}
 
 		chunk.mNeedUpdate = false;
-		chunk.mMesh->set_attribut<attrib_pack>(staticBuffer.size(), staticBuffer.data(), GL_STATIC_DRAW);
+		chunk.mMesh->set_attributs<attrib_pack>(staticBuffer.size(), staticBuffer.data());
 		chunk.mMesh->set_indices(staticIndices.size(), staticIndices.data());
 		chunk.mMesh->unbind();
 	}
