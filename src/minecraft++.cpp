@@ -3,6 +3,7 @@
 #include <iostream>
 #include <array>
 #include <chrono>
+#include <functional>
 
 #include <tinyGL.hpp>
 
@@ -11,7 +12,7 @@
 int main(int argc, char** args)
 {
 	tgl::Init();
-	
+
 #ifdef _DEBUG
 	tgl::gl::glEnable(GL_DEBUG_OUTPUT);
 	tgl::gl::DebugMessageCallback(tgl::gl::callback, nullptr);
@@ -27,7 +28,7 @@ int main(int argc, char** args)
 
 	auto& events = window->get_events();
 	events.size.attach(tgl::view_port);
-
+	
 	tgl::detail::FrameTimeInfo ft_info;
 	bool isRunnig = window->is_open();
 	for (; isRunnig;)
@@ -40,7 +41,7 @@ int main(int argc, char** args)
 
 		tgl::clear_black();
 
-		minecraft->update(ft_info.s());
+		minecraft->update(ft_info.ms());
 		minecraft->render();
 
 		window->swap_buffers();
