@@ -4,6 +4,8 @@
 #include <MarchingCubes/MarchingCubes.hpp>
 
 #include <glm\ext\scalar_constants.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <Octree\Octree.hpp>
 
 namespace game
 {
@@ -12,12 +14,13 @@ namespace game
 		mView(&_View),
 		mWorldSize({ 10,10,10 }),
 		mCamera(
-			glm::vec3(0.f, 0.f, 2.f),
+			glm::vec3(0.f, 0.f, 10.f),
 			glm::vec3(0.f, 0.f, 0.f),
 			glm::vec3(0.f, 1.f, 0.f),
 			_View.get_ratio(),
 			45.f),
-		mIsShowCursor(true)
+		mIsShowCursor(true),
+		mWorldTime(0)
 	{
 		decltype(auto) events = mView->get_events();
 		mMouseRawInputEventID = events.mouse_shift.attach(&mMouse, &MineMouse::shift);
@@ -49,7 +52,7 @@ namespace game
 
 	}
 
-	float circle(const glm::vec3& v)
+	float circle(glm::vec3 v)
 	{
 		return length(v) - 2.f;
 	}
@@ -59,65 +62,24 @@ namespace game
 		tgl::gl::glEnable(GL_DEPTH_TEST);
 		tgl::gl::glEnable(GL_CULL_FACE);
 
-		std::array<float, 12> attribs =
-		{
-			-1.f,  1.f, 0.f,
-			-1.f, -1.f, 0.f,
-			 1.f, -1.f, 0.f,
-			 1.f,  1.f, 0.f,
-		};
-		std::array<float, 12> attrib_color =
-		{
-			1.f, 0.f, 0.f,
-			0.f, 1.f, 0.f,
-			0.f, 0.f, 1.f,
-			1.f, 0.f, 0.f,
-		};
-		std::array<unsigned, 6> indices = { 0,1,2,2,3,0 };
-
-		mMesh.set_attribut(0, 3, attribs.size(), attribs.data(), tgl::GlDrawMode::Static);
-		mMesh.set_attribut(1, 3, attrib_color.size(), attrib_color.data(), tgl::GlDrawMode::Static);
-		mMesh.set_indices(indices.size(), indices.data(), tgl::GlDrawMode::Static);
-
-		auto push_vtcs = [](tgl::Mesh& _Mesh, size_t _Idx, size_t _NumberOfElementPerVertex, std::vector<glm::vec3>& _Vec, tgl::GlDrawMode _DrawMode)
+		// af3 = array of 3 float
+		auto set_vertieces_from_af3 = [](tgl::Mesh& _Mesh, size_t _Idx, size_t _NumberOfElementPerVertex, std::vector<glm::vec3>& _Vec, tgl::GlDrawMode _DrawMode)
 		{
 			_Mesh.set_attribut(_Idx, _NumberOfElementPerVertex, _Vec.size() * 3, &_Vec.data()->x, _DrawMode);
 		};
 
 		auto [vtcs, idcs] = ta::marching_cubes::generate_cubes(glm::vec3(-1.3f), glm::vec3(2.5f), .2f);
-		push_vtcs(mCubesMesh, 0, 3, vtcs, tgl::GlDrawMode::Static);
+		set_vertieces_from_af3(mCubesMesh, 0, 3, vtcs, tgl::GlDrawMode::Static);
 		mCubesMesh.set_indices(idcs.size(), idcs.data(), tgl::GlDrawMode::Static);
 
-		auto circle = [](glm::vec3 _Pos, float _R, float _AngleStep)
-		{
-			uint32_t idx_num = 0;
-			std::vector<glm::vec3> vertices;
-			std::vector<uint32_t> indices;
+		auto tree = ta::Octree(glm::vec3(0.f), glm::vec3(5.f));
+		tree.generate(glm::vec3(0.2f), ::game::circle);
 
-			constexpr float pi2 = 2.f * glm::pi<float>();
-
-			for (float o = 0.f; o < pi2; o += _AngleStep)
-				for (float f = 0.f; f < pi2; f += _AngleStep)
-				{
-					glm::vec3 p(
-						std::sinf(o) * std::cosf(f),
-						std::sinf(o) * std::sinf(f),
-						std::cosf(o));
-					vertices.push_back(p * _R + _Pos);
-					indices.push_back(idx_num++);
-				}
-			return std::make_pair(std::move(vertices), std::move(indices));
-		};
-
-		auto [circle_vtcs, circle_idcs] = circle(glm::vec3(0.f, 0.f, 0.f), 1.f, 0.023f);
-		push_vtcs(mCircleMesh, 0, 3, circle_vtcs, tgl::GlDrawMode::Static);
-		mCircleMesh.set_indices(circle_idcs.size(), circle_idcs.data());
-
-		auto [fill_circle_vtcs, fill_circle_normals, fill_circle_idcs] = 
-			ta::marching_cubes::march_cubes(glm::vec3(-3.f), glm::vec3(6.f), 0.25f, 0.05f, ::game::circle);
-		push_vtcs(mFillCircleMesh, 0, 3, fill_circle_vtcs, tgl::GlDrawMode::Static);
-		push_vtcs(mFillCircleMesh, 1, 3, fill_circle_normals, tgl::GlDrawMode::Static);
-		mFillCircleMesh.set_indices(fill_circle_idcs.size(), fill_circle_idcs.data());
+		auto [oct_vtcs, oct_normals, oct_idcs] =
+			ta::marching_cubes::march_cubes(tree, ::game::circle);
+		set_vertieces_from_af3(mSphereMesh, 0, 3, oct_vtcs, tgl::GlDrawMode::Static);
+		set_vertieces_from_af3(mSphereMesh, 1, 3, oct_normals, tgl::GlDrawMode::Static);
+		mSphereMesh.set_indices(oct_idcs.size(), oct_idcs.data());
 
 		tgl::Shader::path_prefix = "res\\glsl\\";
 		try
@@ -148,43 +110,51 @@ namespace game
 		mShaderPtr->use();
 		mShaderPtr->uniform_matrix4f("world", &world);
 		mShaderPtr->uniform_matrix4f("model", &model);
-		mFillCircleMesh.draw(GL_TRIANGLES);
+		mSphereMesh.draw(GL_TRIANGLES);
 
 		mCubesShader->use();
 		mCubesShader->uniform_matrix4f("camera_mat", &world);
 		//mCubesMesh.draw(GL_LINES);
-
-		//mCircleMesh.draw(GL_POINTS);
-
 	}
 
-	void GameState::update(float _FrameTime) noexcept
+	void GameState::update(uint64_t _FrameTime) noexcept
 	{
-		static float angle = 0.f;
-		angle += 0.25 * _FrameTime;
- 		glm::vec3 light_pos(std::cosf(angle), 0.f, std::sinf(angle));
-		light_pos *= 3.f;
+		mWorldTime += _FrameTime;
+		auto delta_time = _FrameTime / 1000.f;
+
+		static float theta = 0.f, phi = 0.f;
+ 		glm::vec3 light_pos;
+		light_pos.x = sin(theta) * cos(phi);
+		light_pos.y = sin(theta) * sin(phi);
+		light_pos.z = cos(theta);
+
+		light_pos *= 10.f;
 		mShaderPtr->use();
 		mShaderPtr->uniform_vector3f("uLightPos", &light_pos);
 
 		if (mKeyboard.is_move_front())
-			mCamera += mCamera.get_direction() * _FrameTime;
+			mCamera += mCamera.get_direction() * delta_time;
 		if (mKeyboard.is_move_back())
-			mCamera -= mCamera.get_direction() * _FrameTime;
+			mCamera -= mCamera.get_direction() * delta_time;
 		if (mKeyboard.is_move_right())
-			mCamera += mCamera.get_right() * _FrameTime;
+			mCamera += mCamera.get_right() * delta_time;
 		if (mKeyboard.is_move_left())
-			mCamera -= mCamera.get_right() * _FrameTime;
+			mCamera -= mCamera.get_right() * delta_time;
 		if (mKeyboard.is_default())
 			mCamera.set_fovy(45.f);
+		
+		phi += (mKeyboard[VK_UP]) ? 1.5f * delta_time : 0.f;
+		phi -= (mKeyboard[VK_DOWN]) ? 1.5f * delta_time : 0.f;
+		
+		theta += (mKeyboard[VK_RIGHT]) ? 1.5f * delta_time : 0.f;
+		theta -= (mKeyboard[VK_LEFT]) ? 1.5f * delta_time : 0.f;
 
 		if (mMouse.get_update_state())
 		{
 			auto [dx, dy] = mMouse.get_shift();
-			mCamera.update_angles(-glm::radians(dy * _FrameTime), -glm::radians(dx * _FrameTime), 0.f);
+			mCamera.update_angles(-glm::radians(dy * delta_time), -glm::radians(dx * delta_time), 0.f);
 		}
 	}
-
 
 
 	void GameState::on_release_button(uint64_t _Code, int64_t _State) noexcept

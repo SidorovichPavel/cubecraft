@@ -61,25 +61,24 @@ namespace game
 			mEventMouseWheleCameraID;
 
 		ta::Camera mCamera;
-		tgl::Mesh mMesh;
+
+		tgl::Mesh mSphereMesh;
 		std::unique_ptr<tgl::Shader> mShaderPtr;
 
 		tgl::Mesh mCubesMesh;
 		std::unique_ptr<tgl::Shader> mCubesShader;
-		
-		tgl::Mesh mCircleMesh;
-		//std::unique_ptr<tgl::Shader> mCircleShader;
-
-		tgl::Mesh mFillCircleMesh;
 
 		bool mIsShowCursor;
+		uint64_t mWorldTime;
+		uint32_t mFPS;
+		uint32_t mFreeTime;
 	public:
 		GameState(tgl::View& _View) noexcept;
 		~GameState();
 
 		void init() throw();
 		void render() noexcept;
-		void update(float _FrameTime) noexcept;
+		void update(uint64_t _FrameTime) noexcept;
 
 	private:
 		void on_release_button(uint64_t _Code, int64_t _State) noexcept;
