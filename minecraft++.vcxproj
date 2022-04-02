@@ -24,6 +24,7 @@
     <ProjectGuid>{659e98ac-0a1a-48cc-9aab-0dc8f4ede2aa}</ProjectGuid>
     <RootNamespace>minecraft</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>cubecraft</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
