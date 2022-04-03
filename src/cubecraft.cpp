@@ -17,12 +17,11 @@ int main(int argc, char** args)
 	tgl::gl::glEnable(GL_DEBUG_OUTPUT);
 	tgl::gl::DebugMessageCallback(tgl::gl::callback, nullptr);
 #endif
-
+	
 	auto style = new tgl::Style("Cube++");
 	std::unique_ptr<tgl::View> window(new tgl::View(style));
 	window->init_opengl();
 	window->enable_opengl_context();
-
 	auto minecraft = std::make_unique<game::GameState>(*window);
 	minecraft->init();
 
@@ -33,10 +32,10 @@ int main(int argc, char** args)
 	bool isRunnig = window->is_open();
 	for (; isRunnig;)
 	{
-		auto [update, state] = tgl::event_pool(60);
+		auto [update, state] = tgl::event_pool(30, ft_info);
 		isRunnig = window->is_open();
 
-		if (!update || !window->is_open())
+		if (!update && !window->is_open())
 			continue;
 
 		tgl::clear_black();
@@ -46,7 +45,7 @@ int main(int argc, char** args)
 
 		window->swap_buffers();
 
-		update_frame_time(ft_info);
+		ft_info.update_frame_time();
 	}
 
 	return 0;

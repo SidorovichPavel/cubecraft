@@ -31,7 +31,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\minecraft++.cpp">
+    <ClCompile Include="src\cubecraft.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Voxels\Chunk.cpp">

@@ -22,7 +22,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{659e98ac-0a1a-48cc-9aab-0dc8f4ede2aa}</ProjectGuid>
-    <RootNamespace>minecraft</RootNamespace>
+    <RootNamespace>cubecraft</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>cubecraft</ProjectName>
   </PropertyGroup>
@@ -170,7 +170,7 @@
     <ClCompile Include="src\MineDevices\MineKeyBoard.cpp" />
     <ClCompile Include="src\MineDevices\MineMouse.cpp" />
     <ClCompile Include="src\LineBatch\LineBatch.cpp" />
-    <ClCompile Include="src\minecraft++.cpp" />
+    <ClCompile Include="src\cubecraft.cpp" />
     <ClCompile Include="src\Voxels\Chunk.cpp" />
     <ClCompile Include="src\Voxels\Chunks.cpp" />
     <ClCompile Include="src\Voxels\Voxel.cpp" />
