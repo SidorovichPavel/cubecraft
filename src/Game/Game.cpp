@@ -18,7 +18,7 @@ namespace game
 			glm::vec3(0.f, 0.f, 0.f),
 			glm::vec3(0.f, 1.f, 0.f),
 			_View.get_ratio(),
-			45.f),
+			60.f),
 		mIsShowCursor(true),
 		mWorldTime(0)
 	{
@@ -73,7 +73,7 @@ namespace game
 		mCubesMesh.set_indices(idcs.size(), idcs.data(), tgl::GlDrawMode::Static);
 
 		auto tree = ta::Octree(glm::vec3(0.f), glm::vec3(5.f));
-		tree.generate(glm::vec3(0.2f), ::game::circle);
+		tree.generate(glm::vec3(0.5f), ::game::circle);
 
 		auto [oct_vtcs, oct_normals, oct_idcs] =
 			ta::marching_cubes::march_cubes(tree, ::game::circle);

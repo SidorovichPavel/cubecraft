@@ -70,8 +70,6 @@ namespace game
 
 		bool mIsShowCursor;
 		uint64_t mWorldTime;
-		uint32_t mFPS;
-		uint32_t mFreeTime;
 	public:
 		GameState(tgl::View& _View) noexcept;
 		~GameState();
