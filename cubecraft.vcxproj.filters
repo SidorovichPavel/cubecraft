@@ -55,6 +55,9 @@
     <ClCompile Include="src\Game\Game.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>
+    <ClCompile Include="src\Game\Instance.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\glsl\mine.vert">
@@ -120,5 +123,8 @@
       <Filter>src\Game</Filter>
     </ClInclude>
     <ClInclude Include="src\Game\Player.hpp" />
+    <ClInclude Include="src\Game\Instance.hpp">
+      <Filter>src\Game</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

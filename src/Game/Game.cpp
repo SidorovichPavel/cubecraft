@@ -9,21 +9,21 @@
 
 namespace game
 {
-	GameState::GameState(tgl::View& _View) noexcept
+	GameState::GameState(tgl::View* _View)
 		:
-		mView(&_View),
+		mView(_View),
 		mWorldSize({ 10,10,10 }),
 		mCamera(
 			glm::vec3(0.f, 0.f, 10.f),
 			glm::vec3(0.f, 0.f, 0.f),
 			glm::vec3(0.f, 1.f, 0.f),
-			_View.get_ratio(),
+			_View->get_ratio(),
 			60.f),
 		mIsShowCursor(true),
 		mWorldTime(0)
 	{
 		decltype(auto) events = mView->get_events();
-		mMouseRawInputEventID = events.mouse_shift.attach(&mMouse, &MineMouse::shift);
+		mMouseShiftEventID = events.mouse_shift.attach(&mMouse, &MineMouse::shift);
 
 		mKeyPressEventID = events.key_down.attach(&mKeyboard, &MineKeyBoard::key_down);
 		mKeyReleaseEventID[0] = events.key_up.attach(this, &GameState::on_release_button);
@@ -32,16 +32,16 @@ namespace game
 		mEventSizeCameraID = events.size.attach(&mCamera, &ta::Camera::update_aspect);
 		mEventMouseWheleCameraID = events.mouse_wheel.attach(&mCamera, &ta::Camera::update_Fovy);
 
-		events.set_focus.attach(this, &GameState::on_set_focus);
-		events.kill_focus.attach(this, &GameState::on_kill_focus);
+		mEventSetFocusID = events.set_focus.attach(this, &GameState::on_set_focus);
+		mEventKillFocusID = events.kill_focus.attach(this, &GameState::on_kill_focus);
+
+		init();
 	}
 
 	GameState::~GameState()
 	{
-
-
 		decltype(auto) events = mView->get_events();
-		events.mouse_shift.detach(mMouseRawInputEventID);
+		events.mouse_shift.detach(mMouseShiftEventID);
 		events.key_down.detach(mKeyPressEventID);
 		events.key_up.detach(mKeyReleaseEventID[0]);
 		events.key_up.detach(mKeyReleaseEventID[1]);
@@ -49,15 +49,11 @@ namespace game
 		events.size.detach(mEventSizeCameraID);
 		events.mouse_wheel.detach(mEventMouseWheleCameraID);
 
-
+		events.set_focus.detach(mEventSetFocusID);
+		events.kill_focus.detach(mEventKillFocusID);
 	}
 
-	float circle(glm::vec3 v)
-	{
-		return length(v) - 2.f;
-	}
-
-	void GameState::init() throw()
+	void GameState::init()
 	{
 		tgl::gl::glEnable(GL_DEPTH_TEST);
 		tgl::gl::glEnable(GL_CULL_FACE);
@@ -72,11 +68,11 @@ namespace game
 		set_vertieces_from_af3(mCubesMesh, 0, 3, vtcs, tgl::GlDrawMode::Static);
 		mCubesMesh.set_indices(idcs.size(), idcs.data(), tgl::GlDrawMode::Static);
 
-		auto tree = ta::Octree(glm::vec3(0.f), glm::vec3(5.f));
-		tree.generate(glm::vec3(0.5f), ::game::circle);
+		auto tree = ta::GeneratingOctree(glm::vec3(0.f), glm::vec3(5.f), [](glm::vec3 p) {return length(p) - 2.f; });
+		tree.generate(glm::vec3(0.5f));
 
 		auto [oct_vtcs, oct_normals, oct_idcs] =
-			ta::marching_cubes::march_cubes(tree, ::game::circle);
+			ta::marching_cubes::march_cubes(tree);
 		set_vertieces_from_af3(mSphereMesh, 0, 3, oct_vtcs, tgl::GlDrawMode::Static);
 		set_vertieces_from_af3(mSphereMesh, 1, 3, oct_normals, tgl::GlDrawMode::Static);
 		mSphereMesh.set_indices(oct_idcs.size(), oct_idcs.data());
@@ -117,13 +113,16 @@ namespace game
 		//mCubesMesh.draw(GL_LINES);
 	}
 
-	void GameState::update(uint64_t _FrameTime) noexcept
+	void GameState::update(int64_t _FrameTime) noexcept
 	{
+		if (_FrameTime == 0)
+			return;
+
 		mWorldTime += _FrameTime;
 		auto delta_time = _FrameTime / 1000.f;
 
 		static float theta = 0.f, phi = 0.f;
- 		glm::vec3 light_pos;
+		glm::vec3 light_pos;
 		light_pos.x = sin(theta) * cos(phi);
 		light_pos.y = sin(theta) * sin(phi);
 		light_pos.z = cos(theta);
@@ -132,22 +131,30 @@ namespace game
 		mShaderPtr->use();
 		mShaderPtr->uniform_vector3f("uLightPos", &light_pos);
 
-		if (mKeyboard.is_move_front())
-			mCamera += mCamera.get_direction() * delta_time;
-		if (mKeyboard.is_move_back())
-			mCamera -= mCamera.get_direction() * delta_time;
-		if (mKeyboard.is_move_right())
-			mCamera += mCamera.get_right() * delta_time;
-		if (mKeyboard.is_move_left())
-			mCamera -= mCamera.get_right() * delta_time;
+		glm::vec3 shift(0.f);
+
+		using tgl::KeyCode;
+		bool make_move = false;
+		if (mKeyboard[KeyCode::W])
+			shift += (make_move = true, mCamera.get_direction());
+		if (mKeyboard[KeyCode::S])
+			shift -= (make_move = true, mCamera.get_direction());
+		if (mKeyboard[KeyCode::D])
+			shift += (make_move = true, mCamera.get_right());
+		if (mKeyboard[KeyCode::A])
+			shift -= (make_move = true, mCamera.get_right());
+
+		if (make_move)
+			mCamera += normalize(shift) * delta_time;
+
 		if (mKeyboard.is_default())
 			mCamera.set_fovy(45.f);
-		
-		phi += (mKeyboard[VK_UP]) ? 1.5f * delta_time : 0.f;
-		phi -= (mKeyboard[VK_DOWN]) ? 1.5f * delta_time : 0.f;
-		
-		theta += (mKeyboard[VK_RIGHT]) ? 1.5f * delta_time : 0.f;
-		theta -= (mKeyboard[VK_LEFT]) ? 1.5f * delta_time : 0.f;
+
+		phi += (mKeyboard[KeyCode::UP]) ? 1.5f * delta_time : 0.f;
+		phi -= (mKeyboard[KeyCode::DOWN]) ? 1.5f * delta_time : 0.f;
+
+		theta += (mKeyboard[KeyCode::RIGHT]) ? 1.5f * delta_time : 0.f;
+		theta -= (mKeyboard[KeyCode::LEFT]) ? 1.5f * delta_time : 0.f;
 
 		if (mMouse.get_update_state())
 		{
@@ -159,7 +166,12 @@ namespace game
 
 	void GameState::on_release_button(uint64_t _Code, int64_t _State) noexcept
 	{
-		if (_Code == VK_TAB && mKeyboard[VK_TAB])
+		auto is_release = [this, _Code](tgl::KeyCode _TargetCode)
+		{
+			return _Code == static_cast<uint32_t>(_TargetCode) && mKeyboard[_TargetCode]; 
+		};
+
+		if (is_release(tgl::KeyCode::TAB))
 		{
 			mIsShowCursor = !mIsShowCursor;
 			mView->show_cursor(mIsShowCursor);

@@ -54,11 +54,13 @@ namespace game
 
 		tgl::View* mView;
 		tgl::Event<tgl::id_type_info>::id_type
-			mMouseRawInputEventID,
+			mMouseShiftEventID,
 			mKeyPressEventID,
 			mKeyReleaseEventID[2],
 			mEventSizeCameraID,
-			mEventMouseWheleCameraID;
+			mEventMouseWheleCameraID,
+			mEventSetFocusID,
+			mEventKillFocusID;
 
 		ta::Camera mCamera;
 
@@ -71,14 +73,15 @@ namespace game
 		bool mIsShowCursor;
 		uint64_t mWorldTime;
 	public:
-		GameState(tgl::View& _View) noexcept;
+		GameState(tgl::View * _View);
 		~GameState();
 
-		void init() throw();
 		void render() noexcept;
-		void update(uint64_t _FrameTime) noexcept;
+		void update(int64_t _FrameTime) noexcept;
 
 	private:
+		void init();
+
 		void on_release_button(uint64_t _Code, int64_t _State) noexcept;
 		void on_set_focus() noexcept;
 		void on_kill_focus() noexcept;

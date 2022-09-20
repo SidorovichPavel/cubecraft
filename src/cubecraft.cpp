@@ -9,44 +9,51 @@
 
 #include "Game/Game.hpp"
 
-int main(int argc, char** args)
+int wmain(int argc, const wchar_t* args[])
 {
 	tgl::Init();
 
 #ifdef _DEBUG
 	tgl::gl::glEnable(GL_DEBUG_OUTPUT);
 	tgl::gl::DebugMessageCallback(tgl::gl::callback, nullptr);
+
+	auto fps = 30;
+#else
+	auto fps = 120;
 #endif
 	
-	auto style = new tgl::Style("Cube++");
-	std::unique_ptr<tgl::View> window(new tgl::View(style));
+	auto style = new tgl::Style(args[0]);
+	auto window = std::make_unique<tgl::View>(style);
+
 	window->init_opengl();
 	window->enable_opengl_context();
-	auto minecraft = std::make_unique<game::GameState>(*window);
-	minecraft->init();
 
 	auto& events = window->get_events();
-	events.size.attach(tgl::view_port);
+	auto event_size_id = events.size.attach(tgl::view_port);
+
+	auto cubecraft = std::make_unique<game::GameState>(window.get());
 	
 	tgl::detail::FrameTimeInfo ft_info;
 	bool isRunnig = window->is_open();
 	for (; isRunnig;)
 	{
-		auto [update, state] = tgl::event_pool(30, ft_info);
+		auto [update, state] = tgl::event_pool(fps, ft_info);
 		isRunnig = window->is_open();
 
-		if (!update && !window->is_open())
+		if (!window->is_open())
 			continue;
 
 		tgl::clear_black();
 
-		minecraft->update(ft_info.ms());
-		minecraft->render();
+		cubecraft->update(ft_info.ms());
+		cubecraft->render();
 
 		window->swap_buffers();
 
 		ft_info.update_frame_time();
 	}
+
+	events.size.detach(event_size_id);
 
 	return 0;
 }
