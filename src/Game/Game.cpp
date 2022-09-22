@@ -64,7 +64,7 @@ namespace game
 			_Mesh.set_attribut(_Idx, _NumberOfElementPerVertex, _Vec.size() * 3, &_Vec.data()->x, _DrawMode);
 		};
 
-		auto [vtcs, idcs] = ta::marching_cubes::generate_cubes(glm::vec3(-1.3f), glm::vec3(2.5f), .2f);
+		auto [vtcs, idcs] = ta::marching_cubes::generate_cubes(glm::vec3(-1.3f), glm::vec3(5.f), 1.f);
 		set_vertieces_from_af3(mCubesMesh, 0, 3, vtcs, tgl::GlDrawMode::Static);
 		mCubesMesh.set_indices(idcs.size(), idcs.data(), tgl::GlDrawMode::Static);
 
@@ -119,7 +119,6 @@ namespace game
 			return;
 
 		mWorldTime += _FrameTime;
-		auto delta_time = _FrameTime / 1000.f;
 
 		static float theta = 0.f, phi = 0.f;
 		glm::vec3 light_pos;
@@ -131,35 +130,31 @@ namespace game
 		mShaderPtr->use();
 		mShaderPtr->uniform_vector3f("uLightPos", &light_pos);
 
-		glm::vec3 shift(0.f);
+		auto t = _FrameTime * 0.001f;
 
 		using tgl::KeyCode;
-		bool make_move = false;
 		if (mKeyboard[KeyCode::W])
-			shift += (make_move = true, mCamera.get_direction());
+			mCamera += mCamera.get_direction() * t;
 		if (mKeyboard[KeyCode::S])
-			shift -= (make_move = true, mCamera.get_direction());
+			mCamera -= mCamera.get_direction() * t;
 		if (mKeyboard[KeyCode::D])
-			shift += (make_move = true, mCamera.get_right());
+			mCamera += mCamera.get_right() * t;
 		if (mKeyboard[KeyCode::A])
-			shift -= (make_move = true, mCamera.get_right());
-
-		if (make_move)
-			mCamera += normalize(shift) * delta_time;
+			mCamera -= mCamera.get_right() * t;
 
 		if (mKeyboard.is_default())
 			mCamera.set_fovy(45.f);
 
-		phi += (mKeyboard[KeyCode::UP]) ? 1.5f * delta_time : 0.f;
-		phi -= (mKeyboard[KeyCode::DOWN]) ? 1.5f * delta_time : 0.f;
+		phi += (mKeyboard[KeyCode::Up]) ? 1.5f * t : 0.f;
+		phi -= (mKeyboard[KeyCode::Down]) ? 1.5f * t : 0.f;
 
-		theta += (mKeyboard[KeyCode::RIGHT]) ? 1.5f * delta_time : 0.f;
-		theta -= (mKeyboard[KeyCode::LEFT]) ? 1.5f * delta_time : 0.f;
+		theta += (mKeyboard[KeyCode::Right]) ? 1.5f * t : 0.f;
+		theta -= (mKeyboard[KeyCode::Left]) ? 1.5f * t : 0.f;
 
 		if (mMouse.get_update_state())
 		{
 			auto [dx, dy] = mMouse.get_shift();
-			mCamera.update_angles(-glm::radians(dy * delta_time), -glm::radians(dx * delta_time), 0.f);
+			mCamera.update_angles(-glm::radians(dy * t), -glm::radians(dx * t), 0.f);
 		}
 	}
 
@@ -168,7 +163,7 @@ namespace game
 	{
 		auto is_release = [this, _Code](tgl::KeyCode _TargetCode)
 		{
-			return _Code == static_cast<uint32_t>(_TargetCode) && mKeyboard[_TargetCode]; 
+			return _Code == static_cast<uint32_t>(_TargetCode) && mKeyboard[_TargetCode];
 		};
 
 		if (is_release(tgl::KeyCode::TAB))

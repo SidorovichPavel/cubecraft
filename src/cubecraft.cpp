@@ -19,7 +19,7 @@ int wmain(int argc, const wchar_t* args[])
 
 	auto fps = 30;
 #else
-	auto fps = 120;
+	auto fps = 60;
 #endif
 	
 	auto style = new tgl::Style(args[0]);
