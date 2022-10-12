@@ -19,10 +19,12 @@ int wmain(int argc, const wchar_t* args[])
 
 	auto fps = 30;
 #else
-	auto fps = 60;
+	auto fps = 120;
 #endif
 	
 	auto style = new tgl::Style(args[0]);
+	*style << tgl::StyleModifier::OverlappedWindow;
+
 	auto window = std::make_unique<tgl::View>(style);
 
 	window->init_opengl();
@@ -32,7 +34,7 @@ int wmain(int argc, const wchar_t* args[])
 	auto event_size_id = events.size.attach(tgl::view_port);
 
 	auto cubecraft = std::make_unique<game::GameState>(window.get());
-	
+
 	tgl::detail::FrameTimeInfo ft_info;
 	bool isRunnig = window->is_open();
 	for (; isRunnig;)

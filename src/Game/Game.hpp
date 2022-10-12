@@ -53,7 +53,7 @@ namespace game
 		MineKeyBoard mKeyboard;
 
 		tgl::View* mView;
-		tgl::Event<tgl::id_type_info>::id_type
+		tgl::Event<void>::id_type
 			mMouseShiftEventID,
 			mKeyPressEventID,
 			mKeyReleaseEventID[2],
